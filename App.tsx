@@ -1,8 +1,9 @@
 
+
 import React, { useState } from 'react';
 import { CalendarClock, Lightbulb, Compass, Bell } from 'lucide-react';
 import { StoreProvider, useStore } from './contexts/StoreContext';
-import { Thesis } from './types';
+import { Thesis, SearchResultSample } from './types';
 import InsightTab from './components/InsightTab';
 import MyThesisTab from './components/MyThesisTab';
 import DiscoveryTab from './components/DiscoveryTab';
@@ -14,7 +15,7 @@ import NotificationModal from './components/NotificationModal';
 type Tab = 'insight' | 'my-thesis' | 'discovery';
 
 const AppContent: React.FC = () => {
-  const { data } = useStore();
+  const { data, selectDiscoveryStock } = useStore();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('insight');
   
@@ -25,16 +26,31 @@ const AppContent: React.FC = () => {
 
   const unreadCount = data.notifications.filter(n => !n.isRead).length;
 
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+  };
+
+  const handleOpenBuilder = (stock?: Thesis | SearchResultSample) => {
+    if (stock) {
+        // If we are opening builder for a specific stock, ensure store context is set
+        // The builder consumes data.discovery.searchResultSample
+        selectDiscoveryStock(stock.ticker);
+    }
+    // Close other modals if open
+    setSelectedStock(null);
+    setIsBuilderOpen(true);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'insight':
-        return <InsightTab />;
+        return <InsightTab onNavigate={handleTabChange} />;
       case 'my-thesis':
-        return <MyThesisTab onStockClick={setSelectedStock} />;
+        return <MyThesisTab onStockClick={setSelectedStock} onNavigate={handleTabChange} />;
       case 'discovery':
-        return <DiscoveryTab onStartBuilder={() => setIsBuilderOpen(true)} />;
+        return <DiscoveryTab onStartBuilder={handleOpenBuilder} />;
       default:
-        return <MyThesisTab onStockClick={setSelectedStock} />;
+        return <MyThesisTab onStockClick={setSelectedStock} onNavigate={handleTabChange} />;
     }
   };
 
@@ -129,11 +145,21 @@ const AppContent: React.FC = () => {
 
         {/* Global Overlays */}
         {selectedStock && (
-          <StockDetailModal stock={selectedStock} onClose={() => setSelectedStock(null)} />
+          <StockDetailModal 
+            stock={selectedStock} 
+            onClose={() => setSelectedStock(null)} 
+            onAddLogic={() => handleOpenBuilder(selectedStock)}
+          />
         )}
         
         {isBuilderOpen && (
-          <HypothesisBuilder onClose={() => setIsBuilderOpen(false)} />
+          <HypothesisBuilder 
+            onClose={() => setIsBuilderOpen(false)} 
+            onComplete={() => {
+                setIsBuilderOpen(false);
+                setActiveTab('my-thesis');
+            }}
+          />
         )}
 
         {isNotificationOpen && (

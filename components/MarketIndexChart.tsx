@@ -12,7 +12,6 @@ const MarketIndexChart: React.FC = () => {
   // Auto-select based on time (09:00 - 21:00 KST -> KOSPI, else S&P 500)
   useEffect(() => {
     const hour = new Date().getHours();
-    // Assuming user is in KST or similar timezone for the prototype logic
     if (hour >= 9 && hour < 21) {
       setActiveTab('KOSPI');
     } else {
@@ -24,37 +23,42 @@ const MarketIndexChart: React.FC = () => {
   const isPositive = selectedIndex.rate >= 0;
   const color = isPositive ? '#F87171' : '#60A5FA';
 
-  // Generate SVG Path
-  const generatePath = (dataPoints: number[], width: number, height: number) => {
-    if (!dataPoints || dataPoints.length === 0) return '';
-    const min = Math.min(...dataPoints);
-    const max = Math.max(...dataPoints);
-    const range = max - min || 1;
-    
-    // Add padding to avoid cutting off peaks
-    const paddedRange = range * 1.2;
-    const padding = (paddedRange - range) / 2;
-    const effectiveMin = min - padding;
-
-    const points = dataPoints.map((val, i) => {
-      const x = (i / (dataPoints.length - 1)) * width;
-      const y = height - ((val - effectiveMin) / paddedRange) * height;
-      return `${x},${y}`;
-    });
-
-    // Simple line join
-    return points.join(' ');
-  };
-
-  const generateAreaPath = (linePath: string, width: number, height: number) => {
-    return `${linePath} ${width},${height} 0,${height}`;
-  };
-
+  // --- CHART CONFIGURATION ---
   const points = selectedIndex.chartData;
-  const width = 350; // Viewport width for SVG
-  const height = 160;
-  const linePath = `M ${generatePath(points, width, height)}`;
-  const areaPath = generateAreaPath(linePath, width, height);
+  const svgWidth = 350;
+  const svgHeight = 160;
+  const padding = { top: 20, right: 0, bottom: 30, left: 0 }; // Adjusted for labels
+  const graphWidth = svgWidth - padding.left - padding.right;
+  const graphHeight = svgHeight - padding.top - padding.bottom;
+
+  // Calculate Min/Max for Scaling
+  const minVal = Math.min(...points);
+  const maxVal = Math.max(...points);
+  const range = maxVal - minVal || 1;
+  // Add some buffer to the range so line doesn't hit the absolute edge
+  const buffer = range * 0.1;
+  const effectiveMin = minVal - buffer;
+  const effectiveRange = range + (buffer * 2);
+
+  const formatNumber = (num: number) => num.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+  // Generate SVG Path
+  const generatePath = (dataPoints: number[]) => {
+    if (!dataPoints || dataPoints.length === 0) return '';
+    return dataPoints.map((val, i) => {
+      const x = (i / (dataPoints.length - 1)) * graphWidth + padding.left;
+      const y = svgHeight - padding.bottom - ((val - effectiveMin) / effectiveRange) * graphHeight;
+      return `${x},${y}`;
+    }).join(' ');
+  };
+
+  const linePath = `M ${generatePath(points)}`;
+  const areaPath = `${linePath} L ${svgWidth},${svgHeight - padding.bottom} L ${padding.left},${svgHeight - padding.bottom} Z`;
+
+  // Calculate last point for the pulsing dot
+  const lastVal = points[points.length - 1];
+  const lastX = svgWidth; // Since we use full width
+  const lastY = svgHeight - padding.bottom - ((lastVal - effectiveMin) / effectiveRange) * graphHeight;
 
   return (
     <div className="w-full">
@@ -87,8 +91,8 @@ const MarketIndexChart: React.FC = () => {
       </div>
 
       {/* Chart Container */}
-      <div className="relative w-full h-[200px] bg-gradient-to-b from-white/5 to-transparent rounded-3xl border border-white/5 overflow-hidden p-4">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+      <div className="relative w-full h-[200px] bg-gradient-to-b from-white/5 to-transparent rounded-3xl border border-white/5 overflow-hidden p-0">
+        <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full overflow-visible">
           <defs>
             <linearGradient id="gradientArea" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity="0.3" />
@@ -97,26 +101,41 @@ const MarketIndexChart: React.FC = () => {
           </defs>
           
           {/* Area Fill */}
-          <path d={`M ${generatePath(points, width, height)} L ${width},${height} L 0,${height} Z`} fill="url(#gradientArea)" stroke="none" />
+          <path d={areaPath} fill="url(#gradientArea)" stroke="none" />
           
           {/* Line */}
           <path 
-            d={`M ${generatePath(points, width, height)}`} 
+            d={linePath} 
             fill="none" 
             stroke={color} 
-            strokeWidth="3" 
+            strokeWidth="2.5" 
             strokeLinecap="round" 
             strokeLinejoin="round" 
           />
           
+          {/* Y-Axis Min/Max Labels (Inside the chart area) */}
+          <text x={10} y={25} className="text-[10px] fill-zinc-500 font-medium" textAnchor="start">
+            High {formatNumber(maxVal)}
+          </text>
+          <text x={10} y={svgHeight - padding.bottom - 10} className="text-[10px] fill-zinc-500 font-medium" textAnchor="start">
+            Low {formatNumber(minVal)}
+          </text>
+
+          {/* X-Axis Time Labels */}
+          <g className="text-[10px] fill-zinc-500 font-medium">
+            <text x={padding.left} y={svgHeight - 10} textAnchor="start">09:00</text>
+            <text x={svgWidth / 2} y={svgHeight - 10} textAnchor="middle">12:00</text>
+            <text x={svgWidth} y={svgHeight - 10} textAnchor="end">15:30</text>
+          </g>
+
           {/* Current Point Dot */}
           <circle 
-            cx={width} 
-            cy={height - ((points[points.length - 1] - (Math.min(...points) - (Math.max(...points) - Math.min(...points)) * 0.1)) / ((Math.max(...points) - Math.min(...points)) * 1.2)) * height}
-            r="6"
+            cx={lastX} 
+            cy={lastY}
+            r="4"
             fill="#121212"
             stroke={color}
-            strokeWidth="3"
+            strokeWidth="2"
             className="animate-pulse"
           />
         </svg>

@@ -1,11 +1,12 @@
 
+
 import React from 'react';
 import { X, ArrowRight, TrendingUp } from 'lucide-react';
 
 interface LogicDetailModalProps {
   logic: any;
   onClose: () => void;
-  onStockClick: () => void;
+  onStockClick: (ticker: string) => void;
 }
 
 const LogicDetailModal: React.FC<LogicDetailModalProps> = ({ logic, onClose, onStockClick }) => {
@@ -100,8 +101,8 @@ const LogicDetailModal: React.FC<LogicDetailModalProps> = ({ logic, onClose, onS
                         <div 
                           key={stock.ticker} 
                           onClick={() => {
-                            onClose();
-                            onStockClick();
+                            // Call parent handler which eventually calls onStartBuilder
+                            onStockClick(stock.ticker);
                           }}
                           className="flex items-center justify-between p-4 bg-[#1E1E1E] border border-white/5 rounded-2xl active:bg-white/5 active:scale-[0.98] transition-all cursor-pointer group hover:border-app-accent/50"
                         >

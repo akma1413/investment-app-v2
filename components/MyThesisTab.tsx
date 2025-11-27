@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { useStore } from '../contexts/StoreContext';
 import { Cloud, Cpu, Server, Car, Scale, Lightbulb, ChevronRight, Clock, AlertCircle } from 'lucide-react';
@@ -6,9 +7,10 @@ import { Thesis } from '../types';
 
 interface MyThesisTabProps {
   onStockClick: (stock: Thesis) => void;
+  onNavigate: (tab: 'insight' | 'my-thesis' | 'discovery') => void;
 }
 
-const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick }) => {
+const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) => {
   const { data } = useStore();
   const { user, myThesis } = data;
 
@@ -137,8 +139,11 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick }) => {
            );
         })}
         
-        {/* Add New Button Placeholder */}
-        <button className="w-full py-6 rounded-[28px] border-2 border-dashed border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-zinc-400 hover:border-zinc-700 transition-all">
+        {/* Add New Button */}
+        <button 
+          onClick={() => onNavigate('discovery')}
+          className="w-full py-6 rounded-[28px] border-2 border-dashed border-zinc-800 flex items-center justify-center text-zinc-600 hover:text-zinc-400 hover:border-zinc-700 transition-all active:scale-[0.98]"
+        >
            <span className="text-lg font-bold">+ 새 아이디어 추가</span>
         </button>
       </div>

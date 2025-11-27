@@ -1,305 +1,487 @@
 
 
-import React, { useRef, useState } from 'react';
-import { X, Bot, TrendingUp, Clock, CheckCircle2, PartyPopper, AlertTriangle, RefreshCcw, Zap, Globe, Activity } from 'lucide-react';
-import { Thesis } from '../types';
+import React, { useRef, useState, useEffect } from 'react';
+import { X, CheckCircle2, TrendingUp, Clock, BookOpen, ChevronDown, ChevronUp, MessageSquareQuote, ChevronRight, Vote, Check, AlertTriangle, ArrowRight, Activity, Calendar } from 'lucide-react';
+import { Thesis, TimeFrame, EventActionScenario, ActionOption, LogicBlock } from '../types';
 
 interface StockDetailModalProps {
   stock: Thesis;
   onClose: () => void;
+  isLearningMode?: boolean;
+  onReturnToQuiz?: () => void;
+  onAddLogic?: () => void;
 }
 
-const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose }) => {
-  // Logic Section Ref for scroll interaction
-  const logicSectionRef = useRef<HTMLDivElement>(null);
-  const [highlightLogic, setHighlightLogic] = useState(false);
+// --- SUB COMPONENT: STATEFUL EVENT ACTION CARD ---
+const EventActionCard: React.FC<{ scenario: EventActionScenario }> = ({ scenario }) => {
+  // Steps: 'predict' -> 'analysis' -> 'done'
+  const [step, setStep] = useState<'predict' | 'analysis'>('predict');
+  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
 
-  // 1. Check for Verification Status (JustFinished Event)
-  const verificationEvent = stock.events.find(
-    e => e.status === 'JustFinished' && (e.result === 'Hit' || e.result === 'Miss')
-  );
-
-  // 2. Fallback Nudge Logic Checks (Only if no verification event)
-  const hasEarningsImminent = !verificationEvent && stock.events.some(e => e.dDay === 'D-1');
-  const isOverheated = !verificationEvent && stock.changeRate > 5.0;
-
-  const scrollToLogic = () => {
-    if (logicSectionRef.current) {
-      logicSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setHighlightLogic(true);
-      setTimeout(() => setHighlightLogic(false), 2000); // Remove highlight after animation
-    }
+  const handlePredict = (label: string) => {
+    setSelectedPrediction(label);
+    // Simulate processing delay for effect
+    setTimeout(() => {
+        setStep('analysis');
+    }, 600);
   };
 
-  const handleAction = (action: string) => {
-    alert(`${action} 처리되었습니다. (프로토타입)`);
-  };
-
-  // Helper for Volatility Icon
-  const getVolatilityIcon = (type: string) => {
-    switch (type) {
-      case 'News': return <Zap size={20} className="fill-current" />;
-      case 'Macro': return <Globe size={20} />;
-      default: return <Activity size={20} />;
-    }
+  const handleFinalAction = (actionLabel: string) => {
+      alert(`[${actionLabel}] 액션이 설정되었습니다. 이슈 발생 시 가장 먼저 알림을 드립니다.`);
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center pointer-events-none">
-      {/* Backdrop */}
+    <div className="mb-8 animate-in slide-in-from-top-4 duration-700 ease-out">
+        <div className={`relative overflow-hidden rounded-[32px] transition-all duration-500 ${step === 'predict' ? 'bg-[#1E1E1E] border border-white/10' : 'bg-indigo-900/30 border border-indigo-500/30 shadow-[0_0_40px_rgba(99,102,241,0.2)]'}`}>
+            
+            {/* Background Decor */}
+            <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                <Vote size={140} className="text-white transform rotate-12" />
+            </div>
+
+            {/* --- STEP 1: PREDICTION --- */}
+            {step === 'predict' && (
+                <div className="p-7 animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="flex items-center space-x-2 mb-4">
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-black bg-app-accent text-white uppercase tracking-wide">
+                            D-Day Prediction
+                        </span>
+                        <span className="text-xs text-zinc-500 font-bold">참여 시 맞춤 전략 제공</span>
+                    </div>
+
+                    <h3 className="text-2xl font-extrabold text-white mb-2 leading-tight">
+                        {scenario.title}
+                    </h3>
+                    <p className="text-zinc-400 font-medium mb-8">
+                        {scenario.description}
+                    </p>
+
+                    <div className="grid grid-cols-2 gap-3">
+                        <button 
+                            onClick={() => handlePredict('Positive')}
+                            className="h-16 rounded-2xl border-2 border-zinc-700 hover:border-app-positive/50 hover:bg-app-positive/10 active:scale-95 transition-all flex flex-col items-center justify-center space-y-1 group"
+                        >
+                            <span className="text-2xl group-hover:scale-110 transition-transform">🚀</span>
+                            <span className="text-xs font-bold text-zinc-300 group-hover:text-white">잘 나올 것 같아요</span>
+                        </button>
+                        <button 
+                            onClick={() => handlePredict('Negative')}
+                            className="h-16 rounded-2xl border-2 border-zinc-700 hover:border-app-negative/50 hover:bg-app-negative/10 active:scale-95 transition-all flex flex-col items-center justify-center space-y-1 group"
+                        >
+                            <span className="text-2xl group-hover:scale-110 transition-transform">😰</span>
+                            <span className="text-xs font-bold text-zinc-300 group-hover:text-white">실망스러울 듯해요</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* --- STEP 2: CONTEXTUAL PROPOSAL --- */}
+            {step === 'analysis' && (
+                <div className="p-7 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                     <div className="flex items-center space-x-2 mb-5">
+                        <div className="animate-pulse w-2 h-2 rounded-full bg-indigo-400"></div>
+                        <span className="text-xs font-bold text-indigo-300 uppercase tracking-widest">Hypo's Analysis</span>
+                    </div>
+
+                    <div className="bg-[#121212]/50 backdrop-blur-md rounded-2xl p-5 border-l-4 border-indigo-500 mb-6">
+                        <div className="flex items-start space-x-3">
+                            <AlertTriangle size={24} className="text-indigo-400 shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="text-lg font-bold text-white mb-1">
+                                    "잠시만요! {scenario.analysisContext?.message || "시장이 과열 상태입니다."}"
+                                </h4>
+                                <p className="text-sm text-zinc-300 leading-relaxed">
+                                    당신의 예측({selectedPrediction === 'Positive' ? '상승' : '하락'})과 달리, 시장 데이터는 변동성 확대를 예고하고 있습니다. 
+                                    <span className="text-indigo-300 font-bold ml-1">지금은 비중 조절이 유리합니다.</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <p className="text-center text-xs font-bold text-zinc-500 uppercase tracking-wider">Recommended Action</p>
+                        <div className="flex gap-3">
+                            {scenario.options.map((opt, idx) => (
+                                <button 
+                                    key={idx}
+                                    onClick={() => handleFinalAction(opt.label)}
+                                    className={`flex-1 py-4 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all border 
+                                        ${opt.actionType === 'buy' ? 'bg-app-positive text-black border-app-positive' : 
+                                          opt.actionType === 'sell' ? 'bg-app-negative text-white border-app-negative' :
+                                          'bg-zinc-700 text-white border-zinc-600'
+                                        }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    </div>
+  );
+};
+
+// --- SUB COMPONENT: INTERACTIVE LOGIC BLOCK ---
+const LogicHealthItem: React.FC<{ logic: LogicBlock }> = ({ logic }) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    // Mock history if not present (for prototype)
+    const history = logic.history || [
+        { date: '2일 전', type: 'Positive', text: '관련 실적 20% 상회 발표' },
+        { date: '1주 전', type: 'Neutral', text: '경쟁사 신제품 출시 소식' },
+        { date: '2주 전', type: 'Positive', text: 'CEO가 컨퍼런스에서 해당 내용 강조' },
+    ];
+
+    return (
+        <div className="mb-3">
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden group
+                    ${isOpen ? 'bg-[#1E1E1E] border-app-accent' : 'bg-app-surface border-white/5 hover:border-zinc-600'}`}
+            >
+                <div className="flex items-start justify-between relative z-10">
+                    <div className="flex items-start space-x-4">
+                        <div className={`mt-0.5 transition-colors ${isOpen ? 'text-app-accent' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
+                            <CheckCircle2 size={22} strokeWidth={2.5} />
+                        </div>
+                        <div>
+                            <h4 className={`text-base font-bold mb-1 leading-snug ${isOpen ? 'text-white' : 'text-zinc-200'}`}>
+                                {logic.title}
+                            </h4>
+                            <p className="text-sm text-zinc-500 leading-relaxed pr-6">
+                                {logic.desc}
+                            </p>
+                        </div>
+                    </div>
+                    <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                        <ChevronDown size={20} className="text-zinc-600" />
+                    </div>
+                </div>
+            </button>
+
+            {/* Drill-down History */}
+            <div className={`grid transition-[grid-template-rows] duration-500 ease-out ${isOpen ? 'grid-rows-[1fr] mt-2' : 'grid-rows-[0fr]'}`}>
+                <div className="overflow-hidden">
+                    <div className="bg-[#121212] rounded-2xl p-5 border border-white/10 ml-4 relative">
+                        {/* Timeline Line */}
+                        <div className="absolute left-[29px] top-6 bottom-6 w-[2px] bg-zinc-800" />
+                        
+                        <h5 className="text-xs font-bold text-zinc-500 mb-4 pl-1">이 가설의 히스토리</h5>
+                        
+                        <div className="space-y-6">
+                            {history.map((item, idx) => (
+                                <div key={idx} className="relative flex items-start space-x-4">
+                                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 border-2 border-[#121212] 
+                                        ${item.type === 'Positive' ? 'bg-app-positive' : item.type === 'Negative' ? 'bg-app-negative' : 'bg-zinc-500'}`} 
+                                    />
+                                    <div>
+                                        <div className="text-sm font-bold text-white leading-tight mb-1">{item.text}</div>
+                                        <div className="text-xs text-zinc-600">{item.date}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div className="mt-6 pt-4 border-t border-white/5">
+                             <div className="flex items-center justify-between">
+                                <span className="text-xs text-zinc-400">최근 3개월간 유효성</span>
+                                <span className="text-sm font-bold text-app-accent">High (85점)</span>
+                             </div>
+                             <div className="w-full h-1.5 bg-zinc-800 rounded-full mt-2 overflow-hidden">
+                                 <div className="h-full bg-app-accent w-[85%]" />
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// --- SUB COMPONENT: NEWS ITEM ---
+const NewsCard: React.FC<{ news: any }> = ({ news }) => {
+    return (
+        <div className="p-5 bg-app-surface rounded-2xl border border-white/5 mb-3 hover:border-white/10 transition-colors">
+            <div className="flex items-center justify-between mb-3">
+                <span className={`px-2 py-1 rounded-md text-[11px] font-black uppercase tracking-wide 
+                    ${news.type === 'Positive' ? 'bg-app-positive/20 text-app-positive' : 
+                      news.type === 'Negative' ? 'bg-app-negative/20 text-app-negative' : 'bg-zinc-700 text-zinc-300'}`}>
+                    {news.type === 'Positive' ? '호재' : news.type === 'Negative' ? '악재' : '중립'}
+                </span>
+                <span className="text-xs text-zinc-500 font-medium">{news.date}</span>
+            </div>
+            
+            <h3 className="text-lg font-bold text-white leading-snug mb-3">
+                {news.text}
+            </h3>
+
+            {news.analystComment && (
+                <div className="relative mt-4 bg-white/5 rounded-xl p-4 pl-10 border border-white/5">
+                    <MessageSquareQuote size={18} className="absolute top-4 left-3 text-app-accent/80" />
+                    <div className="text-xs font-bold text-zinc-500 mb-1">해설</div>
+                    <p className="text-sm text-zinc-300 font-medium italic leading-relaxed">
+                        "{news.analystComment}"
+                    </p>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Helper to get X-axis labels
+const getXAxisLabels = (frame: TimeFrame) => {
+    switch (frame) {
+        case '1D': return ['09:00', '12:00', '15:30'];
+        case '1W': return ['Mon', 'Wed', 'Fri'];
+        case '1M': return ['4주 전', '2주 전', '오늘'];
+        case '3M': return ['3달 전', '1달 전', '오늘'];
+        case '1Y': return ['Jan', 'Jun', 'Dec'];
+        case '5Y': return ['2020', '2022', '2024'];
+        default: return [];
+    }
+};
+
+const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isLearningMode = false, onReturnToQuiz, onAddLogic }) => {
+  const [activeTimeFrame, setActiveTimeFrame] = useState<TimeFrame>('1M');
+  const [isProfileExpanded, setIsProfileExpanded] = useState(false);
+
+  // Active Event Scenario?
+  const activeEvent = stock.events.find(e => e.actionScenario !== undefined);
+  const showActionCard = !isLearningMode && activeEvent?.actionScenario;
+
+  // Chart Data Processing
+  const chartPoints = stock.chartHistory[activeTimeFrame] || [];
+  const chartNarrative = stock.chartNarratives[activeTimeFrame] || "데이터 부족";
+  const isPositive = (chartPoints[chartPoints.length - 1] - chartPoints[0]) >= 0;
+  const trendColor = isPositive ? '#F87171' : '#60A5FA';
+
+  // SVG Config
+  const svgWidth = 380;
+  const svgHeight = 160;
+  const padding = { top: 20, right: 40, bottom: 20, left: 0 }; // Right padding for Y-axis labels
+  const graphWidth = svgWidth - padding.left - padding.right;
+  const graphHeight = svgHeight - padding.top - padding.bottom;
+
+  // Calculate Scale
+  const minVal = Math.min(...chartPoints);
+  const maxVal = Math.max(...chartPoints);
+  const range = maxVal - minVal || 1;
+  const buffer = range * 0.1; // 10% buffer
+  const effectiveMin = minVal - buffer;
+  const effectiveRange = range + (buffer * 2);
+  const avgVal = chartPoints.reduce((a, b) => a + b, 0) / chartPoints.length;
+  const avgY = svgHeight - padding.bottom - ((avgVal - effectiveMin) / effectiveRange) * graphHeight;
+
+  // X Axis Labels
+  const xLabels = getXAxisLabels(activeTimeFrame);
+
+  const generatePath = (points: number[]) => {
+    if (!points.length) return "";
+    return points.map((val, i) => {
+      const x = (i / (points.length - 1)) * graphWidth + padding.left;
+      const y = svgHeight - padding.bottom - ((val - effectiveMin) / effectiveRange) * graphHeight;
+      return `${x},${y}`;
+    }).join(" ");
+  };
+  const linePath = `M ${generatePath(chartPoints)}`;
+
+  const formatPrice = (p: number) => p.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+  return (
+    <div className={`fixed inset-0 flex items-end sm:items-center justify-center pointer-events-none ${isLearningMode ? 'z-[110]' : 'z-[100]'}`}>
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"
-        onClick={onClose}
+        onClick={!isLearningMode ? onClose : undefined}
       />
       
-      {/* Modal Content */}
       <div className="w-full max-w-[430px] h-[92vh] bg-[#121212] rounded-t-[32px] pointer-events-auto overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300 relative border-t border-white/10 mx-auto">
         
-        {/* Header */}
-        <header className="flex justify-between items-center p-6 border-b border-white/5 bg-[#121212]/95 backdrop-blur-md sticky top-0 z-10">
+        {/* --- HEADER --- */}
+        <header className="flex justify-between items-center px-6 py-5 border-b border-white/5 bg-[#121212]/95 backdrop-blur-md sticky top-0 z-10">
           <div>
-            <div className="flex items-center space-x-3">
-              <h2 className="text-2xl font-bold text-white">{stock.ticker}</h2>
-              <span className="text-base text-zinc-400">{stock.name}</span>
-            </div>
+            <div className="text-xs font-bold text-zinc-500 mb-0.5">{stock.ticker}</div>
+            <h2 className="text-xl font-bold text-white">{stock.name}</h2>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <div className="text-xl font-bold text-white">${stock.currentPrice}</div>
-              <div className={`text-sm font-bold ${stock.changeRate >= 0 ? 'text-app-positive' : 'text-app-negative'} flex justify-end items-center`}>
-                {stock.changeRate > 0 ? '+' : ''}{stock.changeRate}%
-              </div>
-            </div>
-            <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
-              <X size={24} className="text-zinc-400" />
-            </button>
+          <div className="text-right">
+             <div className="text-xl font-bold text-white">${stock.currentPrice}</div>
+             <div className={`text-sm font-bold ${stock.changeRate >= 0 ? 'text-app-positive' : 'text-app-negative'}`}>
+                 {stock.changeRate > 0 ? '+' : ''}{stock.changeRate}%
+             </div>
           </div>
+          {!isLearningMode && (
+              <button onClick={onClose} className="ml-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400">
+                <X size={20} />
+              </button>
+          )}
         </header>
 
-        {/* Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar">
+        {/* --- BODY SCROLL --- */}
+        <div className="flex-1 overflow-y-auto p-6 no-scrollbar pb-32">
           
-          {/* --- NEW: LIVE VOLATILITY BRIEFING (Top Priority) --- */}
-          {stock.volatilityAnalysis && (
-            <div className={`p-6 rounded-[24px] border relative overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 delay-100 ${stock.changeRate >= 0 ? 'bg-app-positive/5 border-app-positive/30' : 'bg-app-negative/5 border-app-negative/30'}`}>
-               
-               {/* Pulsing Dot Animation */}
-               <div className="absolute top-6 right-6 flex items-center space-x-2">
-                 <span className={`relative flex h-3 w-3`}>
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${stock.changeRate >= 0 ? 'bg-app-positive' : 'bg-app-negative'}`}></span>
-                    <span className={`relative inline-flex rounded-full h-3 w-3 ${stock.changeRate >= 0 ? 'bg-app-positive' : 'bg-app-negative'}`}></span>
-                  </span>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${stock.changeRate >= 0 ? 'text-app-positive' : 'text-app-negative'}`}>Live Analysis</span>
-               </div>
-
-               <div className="flex items-center space-x-2 mb-3">
-                 <div className={`p-2 rounded-full ${stock.changeRate >= 0 ? 'bg-app-positive/10 text-app-positive' : 'bg-app-negative/10 text-app-negative'}`}>
-                   {getVolatilityIcon(stock.volatilityAnalysis.type)}
-                 </div>
-                 <span className={`text-sm font-bold ${stock.changeRate >= 0 ? 'text-app-positive' : 'text-app-negative'}`}>
-                   급변동 원인 분석
-                 </span>
-               </div>
-
-               <h3 className="text-xl font-extrabold text-white mb-2 leading-tight">
-                 {stock.volatilityAnalysis.title}
-               </h3>
-               
-               <p className="text-lg text-zinc-300 leading-relaxed font-medium">
-                 "{stock.volatilityAnalysis.desc}"
-               </p>
-
-               <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-zinc-500">
-                  <span className="flex items-center"><Bot size={14} className="mr-1"/> AI Analyst</span>
-                  <span>{stock.volatilityAnalysis.timestamp}</span>
-               </div>
-            </div>
-          )}
-
-          {/* --- HYPOTHESIS VERIFICATION CARD (Dynamic) --- */}
-          {verificationEvent && (
-            <div className={`p-6 rounded-3xl border animate-in fade-in zoom-in duration-500 ${
-              verificationEvent.result === 'Hit' 
-                ? 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_30px_-10px_rgba(16,185,129,0.3)]' 
-                : 'bg-orange-500/10 border-orange-500/20 shadow-[0_0_30px_-10px_rgba(249,115,22,0.3)]'
-            }`}>
-              <div className="flex items-center space-x-3 mb-4">
-                <div className={`p-2.5 rounded-full ${verificationEvent.result === 'Hit' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-orange-500/20 text-orange-500'}`}>
-                  {verificationEvent.result === 'Hit' ? <PartyPopper size={28} /> : <AlertTriangle size={28} />}
-                </div>
-                <h3 className={`text-xl font-extrabold ${verificationEvent.result === 'Hit' ? 'text-emerald-500' : 'text-orange-500'}`}>
-                  {verificationEvent.result === 'Hit' ? '가설 적중!' : '가설 이탈 신호'}
-                </h3>
-              </div>
-
-              <div className="mb-6">
-                <p className={`text-lg font-bold mb-2 ${verificationEvent.result === 'Hit' ? 'text-white' : 'text-white'}`}>
-                  {verificationEvent.result === 'Hit' ? '예상대로 흘러가고 있어요.' : '가설 재점검이 필요합니다.'}
-                </p>
-                <div className="bg-[#121212]/50 p-4 rounded-xl border border-white/5">
-                  <div className="flex items-start space-x-3">
-                    <Bot size={20} className="text-zinc-400 shrink-0 mt-0.5" />
-                    <p className="text-base text-zinc-300 leading-relaxed">
-                      "{verificationEvent.analystFeedback}"
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {verificationEvent.result === 'Hit' ? (
-                  <>
-                    <button 
-                      onClick={() => handleAction('가설 유지')}
-                      className="py-3.5 rounded-xl bg-emerald-600 text-white font-bold text-base hover:bg-emerald-500 transition-colors"
-                    >
-                      가설 유지 (Hold)
-                    </button>
-                    <button 
-                      onClick={() => handleAction('비중 확대')}
-                      className="py-3.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 font-bold text-base hover:bg-emerald-500/20 transition-colors"
-                    >
-                      비중 확대
-                    </button>
-                  </>
-                ) : (
-                  <>
-                     <button 
-                      onClick={() => handleAction('수익 실현')}
-                      className="py-3.5 rounded-xl bg-orange-600 text-white font-bold text-base hover:bg-orange-500 transition-colors"
-                    >
-                      수익 실현 (Sell)
-                    </button>
-                    <button 
-                      onClick={() => handleAction('가설 수정')}
-                      className="py-3.5 rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/30 font-bold text-base hover:bg-orange-500/20 transition-colors"
-                    >
-                      <span className="flex items-center justify-center">
-                        <RefreshCcw size={18} className="mr-2" /> 가설 수정
-                      </span>
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Section A: Analyst's Briefing (Only show if not redundant with verification card) */}
-          {!verificationEvent && !stock.volatilityAnalysis && (
-            <section className="bg-gradient-to-br from-app-surface to-zinc-900 p-6 rounded-3xl border border-app-accent/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-app-accent/10 rounded-full blur-2xl -mr-5 -mt-5" />
-              <div className="flex items-start space-x-4 relative z-10">
-                <div className="p-2.5 bg-app-accent/10 rounded-xl shrink-0">
-                  <Bot size={24} className="text-app-accent" />
-                </div>
+          {/* 0. Learning Mode Banner */}
+          {isLearningMode && (
+             <div className="bg-app-accent/10 border border-app-accent/30 rounded-2xl p-4 flex items-start space-x-3 animate-pulse-slow mb-6">
+                <BookOpen size={20} className="text-app-accent mt-0.5 shrink-0" />
                 <div>
-                  <h3 className="text-base font-bold text-app-accent mb-2">애널리스트 브리핑</h3>
-                  <p className="text-base text-zinc-200 leading-relaxed">
-                    "{stock.dailyBriefing}"
-                  </p>
+                   <h3 className="text-sm font-bold text-app-accent mb-1">힌트 찾는 중...</h3>
+                   <p className="text-xs text-zinc-300 leading-relaxed">
+                     차트와 뉴스를 보고 퀴즈 정답을 유추해보세요.
+                   </p>
                 </div>
-              </div>
-            </section>
+             </div>
           )}
 
-          {/* Section B: Logic Health Check */}
-          <section ref={logicSectionRef} className={`transition-all duration-500 ${highlightLogic ? 'scale-[1.02]' : ''}`}>
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-              나의 투자 논리
-              <span className={`ml-3 text-xs font-bold px-2 py-0.5 rounded-full transition-colors duration-500 ${highlightLogic ? 'bg-app-accent text-white' : 'text-zinc-500 bg-white/5'}`}>
-                Logic Health
-              </span>
-            </h3>
-            <div className="space-y-4">
-              {stock.logicBlocks.map(logic => (
-                <div 
-                  key={logic.id}
-                  className={`flex items-start justify-between p-5 bg-app-surface rounded-2xl border transition-all duration-300 ${highlightLogic ? 'border-app-accent shadow-[0_0_20px_-5px_rgba(129,140,248,0.3)]' : 'border-white/5'}`}
-                >
-                  <div className="flex items-start space-x-4">
-                    <CheckCircle2 size={24} className="text-app-accent mt-0.5 shrink-0" />
-                    <div>
-                      <div className="font-bold text-white text-lg mb-1">{logic.title}</div>
-                      <div className="text-sm text-zinc-400 leading-relaxed">{logic.desc}</div>
-                    </div>
+          {/* 1. HERO: EVENT ACTION CARD (Priority 1) */}
+          {showActionCard && activeEvent.actionScenario && (
+             <EventActionCard scenario={activeEvent.actionScenario} />
+          )}
+
+          {/* 2. CHART CONTEXT (Priority 2) */}
+          <section className="mb-10">
+              <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-white flex items-center">
+                    <Activity size={18} className="mr-2 text-zinc-500" />
+                    주가 흐름
+                  </h3>
+                  <div className="flex bg-white/5 rounded-lg p-0.5">
+                     {(['1D', '1W', '1M', '3M', '1Y', '5Y'] as TimeFrame[]).map(tf => (
+                         <button 
+                            key={tf}
+                            onClick={() => setActiveTimeFrame(tf)}
+                            className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all ${activeTimeFrame === tf ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}
+                         >
+                            {tf}
+                         </button>
+                     ))}
                   </div>
-                </div>
-              ))}
-            </div>
+              </div>
+
+              <div className="w-full h-[160px] mb-4 bg-white/[0.02] rounded-2xl border border-white/5 relative">
+                  <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full overflow-visible">
+                        <defs>
+                            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={trendColor} stopOpacity="0.3" />
+                                <stop offset="100%" stopColor={trendColor} stopOpacity="0" />
+                            </linearGradient>
+                        </defs>
+                        
+                        {/* Average Grid Line */}
+                        <line x1={padding.left} y1={avgY} x2={svgWidth - padding.right} y2={avgY} stroke="#333" strokeDasharray="4 4" strokeWidth="1" />
+
+                        {/* Chart Area & Line */}
+                        <path d={`${linePath} L ${svgWidth - padding.right},${svgHeight - padding.bottom} L ${padding.left},${svgHeight - padding.bottom} Z`} fill="url(#chartGrad)" />
+                        <path d={linePath} fill="none" stroke={trendColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+
+                        {/* Y-Axis Labels (Price) */}
+                        <text x={svgWidth} y={padding.top} className="text-[10px] fill-zinc-500 font-medium" textAnchor="end">
+                           {formatPrice(maxVal)}
+                        </text>
+                        <text x={svgWidth} y={avgY + 3} className="text-[10px] fill-zinc-600 font-medium" textAnchor="end">
+                           Avg
+                        </text>
+                        <text x={svgWidth} y={svgHeight - padding.bottom} className="text-[10px] fill-zinc-500 font-medium" textAnchor="end">
+                           {formatPrice(minVal)}
+                        </text>
+
+                        {/* X-Axis Labels (Time) */}
+                        <g className="text-[10px] fill-zinc-500 font-medium">
+                            <text x={padding.left} y={svgHeight} textAnchor="start">{xLabels[0]}</text>
+                            <text x={(svgWidth - padding.right) / 2} y={svgHeight} textAnchor="middle">{xLabels[1]}</text>
+                            <text x={svgWidth - padding.right} y={svgHeight} textAnchor="end">{xLabels[2]}</text>
+                        </g>
+                  </svg>
+              </div>
+              <div className="flex items-start space-x-2 text-sm text-zinc-400 bg-white/5 p-3 rounded-xl">
+                  <TrendingUp size={16} className="shrink-0 mt-0.5" />
+                  <span>{chartNarrative}</span>
+              </div>
           </section>
 
-          {/* Section C: Impact News Filter */}
-          <section>
-            <h3 className="text-xl font-bold text-white mb-4">가설 체크 뉴스</h3>
-            {stock.newsTags.length === 0 ? (
-              <div className="p-6 rounded-2xl bg-white/5 border border-white/5 text-center text-base text-zinc-500">
-                특이 사항이 없는 조용한 하루네요.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {stock.newsTags.map((news, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`p-5 rounded-2xl border ${news.type === 'Positive' ? 'bg-app-positive/5 border-app-positive/20' : 'bg-app-negative/5 border-app-negative/20'}`}
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className={`text-xs font-bold px-2 py-1 rounded-md ${news.type === 'Positive' ? 'bg-app-positive/20 text-app-positive' : 'bg-app-negative/20 text-app-negative'}`}>
-                        {news.type === 'Positive' ? '호재' : '악재'}
-                      </span>
-                      <span className="text-xs text-zinc-500">{news.date}</span>
-                    </div>
-                    <p className="text-base font-medium text-zinc-200 leading-relaxed">{news.text}</p>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* 3. LOGIC HEALTH (Priority 3) */}
+          <section className="mb-10">
+             <div className="flex items-center justify-between mb-4">
+                 <h3 className="text-lg font-bold text-white flex items-center">
+                    <CheckCircle2 size={18} className="mr-2 text-app-accent" />
+                    내 가설 관리
+                 </h3>
+                 <span className="text-xs font-bold text-zinc-500 bg-white/5 px-2 py-1 rounded-md">Logic Health</span>
+             </div>
+             
+             {/* Logic List */}
+             <div>
+                 {stock.logicBlocks.map(logic => (
+                     <LogicHealthItem key={logic.id} logic={logic} />
+                 ))}
+             </div>
+             
+             {!isLearningMode && (
+                 <button 
+                    onClick={onAddLogic}
+                    className="w-full py-4 border-2 border-dashed border-zinc-800 rounded-2xl text-zinc-500 font-bold text-sm hover:text-white hover:border-zinc-600 transition-colors mt-2"
+                 >
+                     + 새로운 가설 추가하기
+                 </button>
+             )}
           </section>
 
-          {/* Spacer for bottom safety */}
-          <div className="h-32" />
+          {/* 4. NEWS EVIDENCE (Priority 4) */}
+          <section className="mb-10">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center">
+                  <Calendar size={18} className="mr-2 text-zinc-500" />
+                  가설 체크 뉴스
+              </h3>
+              <div>
+                  {stock.newsTags.length > 0 ? (
+                      stock.newsTags.map((news, idx) => (
+                          <NewsCard key={idx} news={news} />
+                      ))
+                  ) : (
+                      <div className="text-center py-8 text-zinc-500 bg-white/5 rounded-2xl border border-white/5">
+                          관련된 주요 뉴스가 없습니다.
+                      </div>
+                  )}
+              </div>
+          </section>
+
+          {/* 5. COMPANY INFO (Footer) */}
+          <section className="pt-6 border-t border-white/5">
+              <h3 className="text-lg font-bold text-white mb-3">무엇을 하는 회사인가요?</h3>
+              <p className="text-zinc-400 leading-relaxed mb-4">
+                  {stock.companyProfile.summary}
+              </p>
+              
+              <div className={`overflow-hidden transition-all duration-300 ${isProfileExpanded ? 'max-h-[500px]' : 'max-h-0'}`}>
+                  <p className="text-zinc-500 text-sm leading-relaxed pb-4">
+                      {stock.companyProfile.description}
+                  </p>
+              </div>
+
+              <button 
+                onClick={() => setIsProfileExpanded(!isProfileExpanded)}
+                className="flex items-center text-sm font-bold text-zinc-500 hover:text-white transition-colors"
+              >
+                  {isProfileExpanded ? '접기' : '더 자세히 보기'} 
+                  {isProfileExpanded ? <ChevronUp size={16} className="ml-1" /> : <ChevronDown size={16} className="ml-1" />}
+              </button>
+          </section>
+
         </div>
 
-        {/* Section D: The Nudge (Floating Bottom Action) - Only show if NO verification card */}
-        {(hasEarningsImminent || isOverheated) && !verificationEvent && (
-          <div className="absolute bottom-8 left-4 right-4 animate-in slide-in-from-bottom duration-500 delay-100 z-20">
-            {hasEarningsImminent && (
-              <div className="bg-[#1A1A1A] p-5 rounded-3xl border border-app-positive/30 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)]">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="p-3 bg-app-positive/10 rounded-full">
-                    <Clock size={24} className="text-app-positive" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-white text-lg">내일 실적 발표</p>
-                    <p className="text-zinc-400 text-sm">가설 점검이 필요합니다.</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={scrollToLogic}
-                  className="w-full h-14 bg-app-positive text-white text-lg font-bold rounded-2xl hover:bg-app-positive/90 transition-colors active:scale-95"
-                >
-                  가설 재점검하기
-                </button>
-              </div>
-            )}
-
-            {isOverheated && !hasEarningsImminent && (
-              <div className="bg-[#1A1A1A] p-5 rounded-3xl border border-app-negative/30 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)]">
-                 <div className="flex items-center space-x-4 mb-4">
-                  <div className="p-3 bg-app-negative/10 rounded-full">
-                    <TrendingUp size={24} className="text-app-negative" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-white text-lg">단기 과열 진입</p>
-                    <p className="text-zinc-400 text-sm">수익 실현을 고민해볼까요?</p>
-                  </div>
-                </div>
-                <button className="w-full h-14 bg-app-negative text-white text-lg font-bold rounded-2xl hover:bg-app-negative/90 transition-colors active:scale-95">
-                  수익 실현하기
-                </button>
-              </div>
-            )}
-          </div>
+        {/* --- LEARNING MODE FAB --- */}
+        {isLearningMode && onReturnToQuiz && (
+           <div className="absolute bottom-6 left-0 right-0 px-6 z-20">
+              <button 
+                onClick={onReturnToQuiz}
+                className="w-full py-4 bg-app-accent hover:bg-indigo-400 text-white font-bold text-lg rounded-2xl shadow-xl shadow-indigo-500/20 active:scale-[0.98] transition-all flex items-center justify-center space-x-2"
+              >
+                <CheckCircle2 size={20} />
+                <span>분석 완료 (질문으로 돌아가기)</span>
+              </button>
+           </div>
         )}
+
       </div>
     </div>
   );

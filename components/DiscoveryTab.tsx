@@ -1,17 +1,41 @@
 
+
 import React, { useState } from 'react';
-import { Search, ChevronRight, TrendingUp, History } from 'lucide-react';
+import { Search, ChevronRight, TrendingUp, History, X } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import LogicDetailModal from './LogicDetailModal';
+import { SearchResultSample } from '../types';
 
 interface DiscoveryTabProps {
-  onStartBuilder: () => void;
+  onStartBuilder: (stock?: SearchResultSample) => void;
 }
 
 const DiscoveryTab: React.FC<DiscoveryTabProps> = ({ onStartBuilder }) => {
-  const { data } = useStore();
-  const { trendingLogics, recentSearches } = data.discovery;
+  const { data, searchStocks, selectDiscoveryStock } = useStore();
+  const { trendingLogics, recentSearches, searchResults } = data.discovery;
   const [selectedLogic, setSelectedLogic] = useState<any | null>(null);
+  const [query, setQuery] = useState("");
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+    searchStocks(val);
+  };
+
+  const handleSearchClear = () => {
+      setQuery("");
+      searchStocks("");
+  };
+
+  const handleStockClick = (ticker: string) => {
+      // Find the full stock object to pass
+      const stock = searchResults.find(s => s.ticker === ticker) 
+                 || data.discovery.trendingLogics.flatMap(l => l.relatedStocksDetails).find(s => s.ticker === ticker) // Try to find in trending
+                 // Fallback to fetch from store context for full details in real app
+                 // For now, relies on selectDiscoveryStock updating the store state which builder reads
+      selectDiscoveryStock(ticker);
+      onStartBuilder(); 
+  };
 
   const getThemeColor = (theme: string) => {
     switch (theme) {
@@ -20,6 +44,15 @@ const DiscoveryTab: React.FC<DiscoveryTabProps> = ({ onStartBuilder }) => {
       case 'orange': return 'text-orange-400 border-orange-400/30 bg-orange-400/10';
       default: return 'text-zinc-400 border-zinc-400/30 bg-zinc-400/10';
     }
+  };
+
+  const formatPrice = (price: number | string | undefined) => {
+      if (price === undefined) return '';
+      if (typeof price === 'string') return price;
+      // If it looks like KRW (large number), use KRW formatting
+      if (price > 1000) return price.toLocaleString('ko-KR') + '원';
+      // Else USD
+      return '$' + price;
   };
 
   return (
@@ -37,88 +70,140 @@ const DiscoveryTab: React.FC<DiscoveryTabProps> = ({ onStartBuilder }) => {
           </div>
           <input 
             type="text" 
-            placeholder="기업, 키워드 검색"
-            className="w-full bg-[#1E1E1E] text-white pl-12 pr-4 py-5 rounded-2xl border border-white/5 focus:outline-none focus:border-app-accent focus:ring-1 focus:ring-app-accent text-lg placeholder:text-zinc-600 transition-all"
+            value={query}
+            onChange={handleSearchChange}
+            placeholder="기업, 키워드 검색 (예: 000660)"
+            className="w-full bg-[#1E1E1E] text-white pl-12 pr-12 py-5 rounded-2xl border border-white/5 focus:outline-none focus:border-app-accent focus:ring-1 focus:ring-app-accent text-lg placeholder:text-zinc-600 transition-all"
           />
+          {query && (
+              <button 
+                onClick={handleSearchClear}
+                className="absolute inset-y-0 right-4 flex items-center text-zinc-500 hover:text-white"
+              >
+                  <X size={20} />
+              </button>
+          )}
         </div>
 
-        {/* Recent Search (Restored) */}
-        {recentSearches.length > 0 && (
-          <section>
-            <div className="flex items-center space-x-2 mb-4">
-               <History size={20} className="text-zinc-400" />
-               <h2 className="text-lg font-bold text-zinc-300">최근 검색</h2>
-            </div>
-            
-            <div className="flex space-x-3 overflow-x-auto no-scrollbar">
-              {recentSearches.map((item) => (
-                <div 
-                  key={item.id} 
-                  onClick={onStartBuilder}
-                  className="flex-shrink-0 bg-[#1E1E1E] p-4 rounded-2xl border border-white/5 flex items-center space-x-3 min-w-[200px] active:bg-white/5 transition-colors cursor-pointer"
-                >
-                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0">
-                      <span className="text-xl font-bold text-black">G</span>
-                   </div>
-                   <div className="flex-1">
-                      <div className="text-base font-bold text-white leading-tight">{item.ticker}</div>
-                      <div className="text-xs text-zinc-500">{item.name}</div>
-                   </div>
-                   <ChevronRight size={18} className="text-zinc-600" />
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Trending Scenarios List */}
-        <section>
-          <div className="flex items-center space-x-2 mb-6">
-            <TrendingUp size={24} className="text-app-accent" />
-            <h2 className="text-2xl font-bold text-white">주목할 시나리오</h2>
-          </div>
-
-          <div className="space-y-5">
-            {trendingLogics.map((logic: any) => (
-              <div 
-                key={logic.rank} 
-                onClick={() => setSelectedLogic(logic)}
-                className="bg-[#1E1E1E] p-6 rounded-[28px] border border-white/5 active:scale-[0.98] transition-all duration-200 cursor-pointer relative overflow-hidden group hover:border-white/10"
-              >
-                {/* Top Badge Row */}
-                <div className="flex justify-between items-start mb-3 relative z-10">
-                   <div className={`px-3 py-1.5 rounded-full text-xs font-bold border ${getThemeColor(logic.theme)}`}>
-                      {logic.badge}
-                   </div>
-                   <div className="text-4xl font-black text-white/5 absolute right-0 top-0 -mt-2 -mr-2 group-hover:text-white/10 transition-colors">
-                      {logic.rank}
-                   </div>
-                </div>
-
-                {/* Content */}
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-white mb-1 leading-tight">{logic.title}</h3>
-                  <p className="text-base text-zinc-400 font-medium mb-4">{logic.subtitle}</p>
-                  
-                  <div className="h-[1px] w-full bg-white/5 mb-4" />
-                  
-                  <div className="flex justify-between items-center">
-                     <div className="flex -space-x-2">
-                        {logic.relatedStocksDetails?.map((stock: any, i: number) => (
-                          <div key={i} className="px-3 py-1 bg-black rounded-lg border border-zinc-700 text-xs text-zinc-300 font-bold z-0">
-                            {stock.ticker}
-                          </div>
+        {/* --- SEARCH RESULTS VIEW --- */}
+        {query ? (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <h2 className="text-sm font-bold text-zinc-500 mb-4 px-1">검색 결과</h2>
+                {searchResults.length > 0 ? (
+                    <div className="space-y-3">
+                        {searchResults.map((stock) => (
+                            <div 
+                                key={stock.ticker}
+                                onClick={() => handleStockClick(stock.ticker)}
+                                className="flex items-center justify-between p-4 bg-[#1E1E1E] rounded-2xl border border-white/5 active:scale-[0.98] transition-all cursor-pointer hover:border-white/20"
+                            >
+                                <div className="flex items-center space-x-4">
+                                    <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center text-lg font-bold text-zinc-400">
+                                        {stock.ticker.length > 4 ? stock.name[0] : stock.ticker[0]}
+                                    </div>
+                                    <div>
+                                        <div className="text-lg font-bold text-white">{stock.name}</div>
+                                        <div className="text-sm text-zinc-500">{stock.ticker}</div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-lg font-bold text-white">{formatPrice(stock.currentPrice)}</div>
+                                    <div className={`text-sm font-bold ${stock.changeRate && stock.changeRate >= 0 ? 'text-app-positive' : 'text-app-negative'}`}>
+                                        {stock.changeRate && stock.changeRate > 0 ? '+' : ''}{stock.changeRate}%
+                                    </div>
+                                </div>
+                            </div>
                         ))}
-                     </div>
-                     <div className="flex items-center text-sm font-bold text-app-accent group-hover:translate-x-1 transition-transform">
-                        상세 분석 <ChevronRight size={16} />
-                     </div>
-                  </div>
+                    </div>
+                ) : (
+                    <div className="text-center py-12 text-zinc-500">
+                        검색 결과가 없습니다.
+                    </div>
+                )}
+            </div>
+        ) : (
+            <>
+                {/* --- DEFAULT VIEW: RECENT & TRENDING --- */}
+                
+                {/* Recent Search */}
+                {recentSearches.length > 0 && (
+                <section>
+                    <div className="flex items-center space-x-2 mb-4">
+                    <History size={20} className="text-zinc-400" />
+                    <h2 className="text-lg font-bold text-zinc-300">최근 검색</h2>
+                    </div>
+                    
+                    <div className="flex space-x-3 overflow-x-auto no-scrollbar">
+                    {recentSearches.map((item) => (
+                        <div 
+                        key={item.id} 
+                        onClick={() => handleStockClick(item.ticker)}
+                        className="flex-shrink-0 bg-[#1E1E1E] p-4 rounded-2xl border border-white/5 flex items-center space-x-3 min-w-[200px] active:bg-white/5 transition-colors cursor-pointer"
+                        >
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0">
+                            <span className="text-xl font-bold text-black">{item.ticker[0]}</span>
+                        </div>
+                        <div className="flex-1">
+                            <div className="text-base font-bold text-white leading-tight">{item.ticker}</div>
+                            <div className="text-xs text-zinc-500">{item.name}</div>
+                        </div>
+                        <ChevronRight size={18} className="text-zinc-600" />
+                        </div>
+                    ))}
+                    </div>
+                </section>
+                )}
+
+                {/* Trending Scenarios List */}
+                <section>
+                <div className="flex items-center space-x-2 mb-6">
+                    <TrendingUp size={24} className="text-app-accent" />
+                    <h2 className="text-2xl font-bold text-white">주목할 시나리오</h2>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+
+                <div className="space-y-5">
+                    {trendingLogics.map((logic: any) => (
+                    <div 
+                        key={logic.rank} 
+                        onClick={() => setSelectedLogic(logic)}
+                        className="bg-[#1E1E1E] p-6 rounded-[28px] border border-white/5 active:scale-[0.98] transition-all duration-200 cursor-pointer relative overflow-hidden group hover:border-white/10"
+                    >
+                        {/* Top Badge Row */}
+                        <div className="flex justify-between items-start mb-3 relative z-10">
+                        <div className={`px-3 py-1.5 rounded-full text-xs font-bold border ${getThemeColor(logic.theme)}`}>
+                            {logic.badge}
+                        </div>
+                        <div className="text-4xl font-black text-white/5 absolute right-0 top-0 -mt-2 -mr-2 group-hover:text-white/10 transition-colors">
+                            {logic.rank}
+                        </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="relative z-10">
+                        <h3 className="text-2xl font-bold text-white mb-1 leading-tight">{logic.title}</h3>
+                        <p className="text-base text-zinc-400 font-medium mb-4">{logic.subtitle}</p>
+                        
+                        <div className="h-[1px] w-full bg-white/5 mb-4" />
+                        
+                        <div className="flex justify-between items-center">
+                            <div className="flex -space-x-2">
+                                {logic.relatedStocksDetails?.map((stock: any, i: number) => (
+                                <div key={i} className="px-3 py-1 bg-black rounded-lg border border-zinc-700 text-xs text-zinc-300 font-bold z-0">
+                                    {stock.ticker}
+                                </div>
+                                ))}
+                            </div>
+                            <div className="flex items-center text-sm font-bold text-app-accent group-hover:translate-x-1 transition-transform">
+                                상세 분석 <ChevronRight size={16} />
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                </section>
+            </>
+        )}
       </div>
 
       {/* Logic Detail Modal */}
@@ -126,7 +211,10 @@ const DiscoveryTab: React.FC<DiscoveryTabProps> = ({ onStartBuilder }) => {
         <LogicDetailModal 
           logic={selectedLogic} 
           onClose={() => setSelectedLogic(null)} 
-          onStockClick={onStartBuilder}
+          onStockClick={(ticker) => {
+              handleStockClick(ticker);
+              setSelectedLogic(null);
+          }}
         />
       )}
     </div>
