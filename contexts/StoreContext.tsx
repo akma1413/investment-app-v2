@@ -1,5 +1,3 @@
-
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AppData, StoreContextType, SearchResultSample, Thesis, LogicBlock, TimeFrame } from '../types';
 
@@ -28,7 +26,7 @@ const generateChart = (startPrice: number, count: number, trend: 'up' | 'down' |
 };
 
 // --- DUMMY DATABASE FOR SEARCH ---
-const ALL_STOCKS: SearchResultSample[] = [
+export const ALL_STOCKS: SearchResultSample[] = [
   {
     ticker: "GOOGL",
     name: "알파벳 A",

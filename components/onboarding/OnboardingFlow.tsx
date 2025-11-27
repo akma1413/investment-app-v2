@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
-import { Camera, Bell, Check, Layers, ArrowRight, X, ChevronRight, HelpCircle, Quote, Info } from 'lucide-react';
-import { useStore } from '../../contexts/StoreContext';
+import { Camera, Bell, Check, Layers, ArrowRight, X, ChevronRight, HelpCircle, Quote, Info, SkipForward } from 'lucide-react';
+import { useStore, ALL_STOCKS } from '../../contexts/StoreContext';
+import { QuizCategory, SearchResultSample } from '../../types';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -16,129 +16,10 @@ type Step =
   | 'quiz' // New: Multi-step quiz
   | 'permission';
 
-// Default Data for fallback
-const DEFAULT_QUIZ = [
-  {
-    id: 1,
-    question: "이 기업의 현재\n가장 큰 리스크는?",
-    options: [
-      { text: "경쟁 심화로 인한 점유율 하락", type: 'bear' },
-      { text: "시장 지배력 확대로 성장 지속", type: 'bull' },
-      { text: "잘 모르겠어요", type: 'idk' }
-    ],
-    context: {
-      title: "리스크 팩트 체크",
-      chart: "M0,35 Q20,38 40,25 T80,15 T100,5",
-      points: [
-        "최근 3개월간 주가는 15% 조정을 받았습니다.",
-        "경쟁사들의 AI 기술 추격이 거센 상황입니다.",
-        "하지만 밸류에이션 매력 구간에 진입했다는 평가입니다."
-      ]
-    }
-  },
-  {
-    id: 2,
-    question: "향후 1년 내\n가장 기대되는 모멘텀은?",
-    options: [
-      { text: "신규 서비스/제품 출시 효과", type: 'bull' },
-      { text: "비용 절감을 통한 이익 개선", type: 'bear' },
-      { text: "잘 모르겠어요", type: 'idk' }
-    ],
-    context: {
-      title: "성장 모멘텀 점검",
-      chart: "M0,40 L20,35 L40,30 L60,10 L80,20 L100,5",
-      points: [
-        "다음 분기 신제품 발표가 예정되어 있습니다.",
-        "시장 컨센서스는 매출 10% 성장을 예상합니다.",
-        "과거 유사 시기에 주가가 20% 상승한 이력이 있습니다."
-      ]
-    }
-  }
-];
-
-const QUIZ_DATA: Record<string, any[]> = {
-  TSLA: [
-    {
-      id: 1,
-      question: "전기차 시장에서\n테슬라의 입지는?",
-      options: [
-        { text: "전기차 시장의 압도적 1위가 될 것이다.", type: 'bull' },
-        { text: "중국 기업들에게 점유율을 뺏길 것이다.", type: 'bear' },
-        { text: "잘 모르겠어요", type: 'idk' }
-      ],
-      context: {
-        title: "테슬라의 현재 위치",
-        chart: "M0,35 Q20,38 40,25 T80,15 T100,5",
-        points: [
-            "BYD 등 중국 기업의 추격이 거셉니다.",
-            "하지만 미국 내 점유율은 50% 이상 유지 중입니다.",
-            "단순 판매량보다 마진율 방어가 핵심입니다."
-        ]
-      }
-    },
-    {
-      id: 2,
-      question: "자율주행과 로보택시의\n미래는?",
-      options: [
-        { text: "로보택시로 모빌리티 시장을 독점할 것이다.", type: 'bull' },
-        { text: "규제와 기술 장벽으로 시간이 오래 걸릴 것이다.", type: 'bear' },
-        { text: "잘 모르겠어요", type: 'idk' }
-      ],
-      context: {
-        title: "FSD와 로보택시",
-        chart: "M0,40 L20,35 L40,30 L60,10 L80,20 L100,5",
-        points: [
-            "FSD 누적 주행 데이터 10억 마일 돌파",
-            "8월 로보택시 공개가 주가 분수령",
-            "규제 당국의 승인 속도가 관건입니다."
-        ]
-      }
-    }
-  ],
-  GOOGL: [
-      {
-        id: 1,
-        question: "생성형 AI 검색이\n구글을 위협할까요?",
-        options: [
-            { text: "검색 광고 매출이 줄어들 것이다.", type: 'bear' },
-            { text: "AI 결합으로 검색 시장을 더 키울 것이다.", type: 'bull' },
-            { text: "잘 모르겠어요", type: 'idk' }
-        ],
-        context: {
-            title: "검색 시장 패권 전쟁",
-            chart: "M0,20 L30,25 L60,15 L100,5",
-            points: [
-                "Perplexity 등 AI 검색 스타트업 부상",
-                "하지만 구글 검색 점유율은 여전히 90% 상회",
-                "유튜브 등 플랫폼 락인 효과가 강력합니다."
-            ]
-        }
-      },
-       {
-        id: 2,
-        question: "클라우드 성장세는\n지속될까요?",
-        options: [
-            { text: "기업들의 AI 도입으로 고성장 할 것이다.", type: 'bull' },
-            { text: "MS, 아마존에 밀려 성장이 둔화될 것이다.", type: 'bear' },
-            { text: "잘 모르겠어요", type: 'idk' }
-        ],
-        context: {
-            title: "클라우드 3강 구도",
-            chart: "M0,35 L50,20 L100,10",
-            points: [
-                "구글 클라우드 영업이익률 흑자 전환 성공",
-                "TPU(자체 칩)로 인한 비용 효율화 진행 중",
-                "엔터프라이즈 AI 시장 침투율이 증가하고 있습니다."
-            ]
-        }
-      }
-  ]
-};
-
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [step, setStep] = useState<Step>('splash');
   const [name, setName] = useState("");
-  const { updateUserName } = useStore();
+  const { data, updateUserName, addToMyThesis } = useStore();
   
   // Carousel State
   const [slideIndex, setSlideIndex] = useState(0);
@@ -147,10 +28,13 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
 
+  // Stock Selection State (Real Data)
+  const [scannedStocks, setScannedStocks] = useState<SearchResultSample[]>([]);
+  const [selectedStock, setSelectedStock] = useState<SearchResultSample | null>(null);
+
   // Quiz State
-  const [selectedStock, setSelectedStock] = useState<string>('TSLA'); 
-  const [quizStepIndex, setQuizStepIndex] = useState(0); // 0, 1
-  const [showQuizContext, setShowQuizContext] = useState(false);
+  const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+  const [selectedLogics, setSelectedLogics] = useState<number[]>([]);
 
   // Splash Timer
   useEffect(() => {
@@ -170,6 +54,26 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   }, [step]);
 
+  // OCR Logic: Match user holdings with available database
+  useEffect(() => {
+    if (step === 'ocr' && scanComplete) {
+       // Combine domestic and overseas holdings
+       const allHoldings = [...data.user.holdings.domestic, ...data.user.holdings.overseas];
+       
+       // Filter ALL_STOCKS to find matches
+       const matches = ALL_STOCKS.filter(stock => 
+          allHoldings.some(h => h.ticker === stock.ticker)
+       );
+       
+       // If matches found, use them. Else use top 3 defaults.
+       if (matches.length > 0) {
+           setScannedStocks(matches);
+       } else {
+           setScannedStocks(ALL_STOCKS.slice(0, 3));
+       }
+    }
+  }, [step, scanComplete, data.user.holdings]);
+
   const handleNameSubmit = () => {
     if (name.trim().length > 0) {
       updateUserName(name);
@@ -186,31 +90,63 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }, 2000);
   };
 
-  const handleStockSelect = (stock: string) => {
+  const handleStockSelect = (stock: SearchResultSample) => {
     setSelectedStock(stock);
-    setQuizStepIndex(0);
+    setCurrentQuizIndex(0);
+    setSelectedLogics([]);
     setStep('quiz');
   };
 
-  const handleQuizOption = (type: string) => {
-    if (type === 'idk') {
-      setShowQuizContext(true);
-    } else {
-      // Advance quiz or finish
-      if (quizStepIndex < 1) { // 2 questions total
-        setQuizStepIndex(prev => prev + 1);
-      } else {
-        setStep('permission');
+  // --- QUIZ HELPERS ---
+  const quizData = selectedStock?.quizData || [];
+  const currentQuestion = quizData[currentQuizIndex];
+  const progress = ((currentQuizIndex) / quizData.length) * 100;
+  const currentCategory: QuizCategory = currentQuestion?.category || 'LongTerm';
+
+  const handleQuizAnswer = (option: any) => {
+      // 1. Collect Logic
+      if (option.relatedLogicId) {
+          setSelectedLogics(prev => {
+              const id = Number(option.relatedLogicId);
+              return prev.includes(id) ? prev : [...prev, id];
+          });
       }
-    }
+
+      // 2. Next Question or Finish
+      if (currentQuizIndex < quizData.length - 1) {
+          setCurrentQuizIndex(prev => prev + 1);
+      } else {
+          setStep('permission');
+      }
   };
 
-  const handleCloseContext = () => {
-    setShowQuizContext(false);
+  const handleSkip = () => {
+      if (currentCategory === 'LongTerm') {
+          // Skip to ShortTerm
+          const shortTermIndex = quizData.findIndex(q => q.category === 'ShortTerm');
+          if (shortTermIndex !== -1) {
+              setCurrentQuizIndex(shortTermIndex);
+          } else {
+              setStep('permission');
+          }
+      } else {
+          // Skip to Finish
+          setStep('permission');
+      }
   };
 
-  const quizDataForStock = QUIZ_DATA[selectedStock] || DEFAULT_QUIZ;
-  const currentQuestion = quizDataForStock[quizStepIndex];
+  const handleFinalComplete = () => {
+      if (selectedStock) {
+          // Save to store
+          addToMyThesis(
+              selectedStock,
+              selectedLogics,
+              'Invested', // Defaulting to invested since it came from holdings
+              '100만원 미만' // Default amount or collected in a new step if needed
+          );
+          onComplete();
+      }
+  };
 
   return (
     <div className="absolute inset-0 z-[200] bg-[#121212] flex flex-col items-center justify-center text-white overflow-hidden font-sans">
@@ -400,111 +336,92 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             </h2>
             
             <div className="space-y-4">
-              <button 
-                onClick={() => handleStockSelect('TSLA')}
-                className="w-full bg-[#1E1E1E] p-6 rounded-3xl border border-white/5 text-left active:scale-[0.98] transition-all hover:border-app-accent group"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-2xl font-bold text-white">Tesla</span>
-                  <span className="text-xl font-bold text-app-positive">+12%</span>
-                </div>
-                <div className="text-zinc-500 group-hover:text-zinc-300 transition-colors">
-                  수익 실현 할까? 더 들고 갈까?
-                </div>
-              </button>
-
-              <button 
-                onClick={() => handleStockSelect('GOOGL')}
-                className="w-full bg-[#1E1E1E] p-6 rounded-3xl border border-white/5 text-left active:scale-[0.98] transition-all hover:border-app-negative group"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-2xl font-bold text-white">Alphabet A</span>
-                  <span className="text-xl font-bold text-app-negative">-5%</span>
-                </div>
-                <div className="text-zinc-500 group-hover:text-zinc-300 transition-colors">
-                  손절 해야 할까? 물 타야 할까?
-                </div>
-              </button>
+              {scannedStocks.map(stock => (
+                  <button 
+                    key={stock.ticker}
+                    onClick={() => handleStockSelect(stock)}
+                    className={`w-full bg-[#1E1E1E] p-6 rounded-3xl border border-white/5 text-left active:scale-[0.98] transition-all group hover:border-app-accent`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-2xl font-bold text-white">{stock.name}</span>
+                      <span className={`text-xl font-bold ${stock.changeRate >= 0 ? 'text-app-positive' : 'text-app-negative'}`}>
+                          {stock.changeRate > 0 ? '+' : ''}{stock.changeRate}%
+                      </span>
+                    </div>
+                    <div className="text-zinc-500 group-hover:text-zinc-300 transition-colors">
+                      {stock.changeRate < 0 ? '손절 해야 할까? 물 타야 할까?' : '수익 실현 할까? 더 들고 갈까?'}
+                    </div>
+                  </button>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* --- STEP 6: QUIZ LOOP (EDUCATIONAL) --- */}
+      {/* --- STEP 6: QUIZ LOOP (NEW LOGIC) --- */}
       {step === 'quiz' && (
-        <div className="w-full h-full relative overflow-hidden">
-          {/* Background Elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-app-accent/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+        <div className="w-full h-full flex flex-col animate-in slide-in-from-right duration-300">
+            {/* Header */}
+            <div className="px-6 pt-24">
+               <div className="flex justify-end mb-2">
+                   <button 
+                    onClick={handleSkip}
+                    className="flex items-center text-xs font-bold text-zinc-500 hover:text-white transition-colors py-2"
+                   >
+                       {currentCategory === 'LongTerm' ? '건너뛰고 중단기 전망 보기' : '건너뛰고 결과 보기'} 
+                       <SkipForward size={12} className="ml-1" />
+                   </button>
+               </div>
 
-          {/* Main Quiz Content */}
-          <div className={`w-full h-full flex flex-col px-6 pt-24 pb-8 transition-all duration-300 ${showQuizContext ? 'scale-95 opacity-50 blur-sm pointer-events-none' : 'scale-100 opacity-100'}`}>
-             
-             {/* Progress Bar */}
-             <div className="flex space-x-2 mb-8">
-               {[0, 1].map(i => (
-                 <div key={i} className={`h-1.5 rounded-full transition-all duration-300 ${i <= quizStepIndex ? 'w-8 bg-app-accent' : 'w-4 bg-zinc-800'}`} />
-               ))}
-             </div>
+               <div className="flex items-center justify-between mb-4">
+                 <div className="flex items-center space-x-2">
+                    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide border 
+                        ${currentCategory === 'LongTerm' 
+                            ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' 
+                            : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
+                        {currentCategory === 'LongTerm' ? '장기적 관점' : '중단기 전망'}
+                    </span>
+                    <span className="text-sm font-bold text-zinc-500">Q{currentQuizIndex + 1}</span>
+                 </div>
+               </div>
+               
+               {/* Progress Bar */}
+               <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                 <div 
+                   className={`h-full transition-all duration-300 ease-out ${currentCategory === 'LongTerm' ? 'bg-purple-500' : 'bg-emerald-500'}`}
+                   style={{ width: `${progress}%` }}
+                 />
+               </div>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 flex flex-col p-6">
+                <div className="flex-1 flex flex-col justify-center pb-8">
+                     <h2 className="text-3xl font-bold text-white leading-tight whitespace-pre-line mb-8">
+                       {currentQuestion?.question}
+                     </h2>
 
-             <h2 className="text-3xl font-bold leading-tight mb-8 whitespace-pre-wrap animate-in slide-in-from-right duration-300 key={quizStepIndex}">
-               {currentQuestion.question}
-             </h2>
-
-             <div className="flex-1 space-y-4">
-                {currentQuestion.options.map((option: any, idx: number) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleQuizOption(option.type)}
-                    className={`w-full p-5 rounded-2xl text-left border transition-all active:scale-[0.98] 
-                      ${option.type === 'idk' 
-                        ? 'bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200' 
-                        : 'bg-[#1E1E1E] border-white/5 text-white hover:border-app-accent/50'
-                      }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-medium">{option.text}</span>
-                      {option.type === 'idk' && <HelpCircle size={20} />}
-                    </div>
-                  </button>
-                ))}
-             </div>
-          </div>
-
-          {/* Context Card Overlay (Glassmorphism) */}
-          <div className={`absolute inset-x-0 bottom-0 bg-[#1A1A1A]/90 backdrop-blur-xl rounded-t-[32px] border-t border-white/10 shadow-2xl transition-transform duration-500 ease-out z-50 flex flex-col ${showQuizContext ? 'translate-y-0' : 'translate-y-full'}`} style={{ height: '80%' }}>
-            {showQuizContext && (
-              <div className="flex-1 p-8 flex flex-col overflow-y-auto no-scrollbar">
-                <div className="w-12 h-1.5 bg-zinc-700 rounded-full mx-auto mb-8 shrink-0" />
-                
-                <h3 className="text-app-accent font-bold mb-2 flex items-center">
-                    <Info size={16} className="mr-1" />
-                    팩트 체크
-                </h3>
-                <h2 className="text-2xl font-bold text-white mb-6">{currentQuestion.context.title}</h2>
-                
-                {/* Points List */}
-                <div className="space-y-4 mb-8">
-                    {currentQuestion.context.points.map((point: string, i: number) => (
-                        <div key={i} className="flex items-start space-x-3 p-4 bg-white/5 rounded-2xl border border-white/5">
-                            <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
-                                {i+1}
-                            </div>
-                            <p className="text-zinc-200 text-lg leading-snug">{point}</p>
-                        </div>
-                    ))}
+                     <div className="space-y-3">
+                        {currentQuestion?.options.map((option, idx) => (
+                           <button
+                             key={idx}
+                             onClick={() => handleQuizAnswer(option)}
+                             className={`w-full p-5 rounded-2xl text-left border transition-all active:scale-[0.98] flex items-center justify-between group
+                               ${option.type === 'idk' 
+                                 ? 'bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200' 
+                                 : 'bg-[#1E1E1E] border-white/5 text-white hover:border-app-accent/50 hover:bg-white/5'
+                               }`}
+                           >
+                             <span className="text-lg font-medium">{option.text}</span>
+                             {option.type !== 'idk' && <ArrowRight size={20} className="text-zinc-600 group-hover:text-white" />}
+                           </button>
+                        ))}
+                     </div>
                 </div>
-
-                <div className="mt-auto">
-                  <button 
-                    onClick={handleCloseContext}
-                    className="w-full h-14 bg-white text-black font-bold text-lg rounded-2xl hover:bg-zinc-200 transition-colors"
-                  >
-                    이제 알겠어요
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+                <p className="text-center text-xs text-zinc-600">
+                    답변을 바탕으로 투자 논리를 구성합니다.
+                </p>
+            </div>
         </div>
       )}
 
@@ -527,7 +444,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           </div>
 
           <button 
-            onClick={onComplete}
+            onClick={handleFinalComplete}
             className="w-full h-14 bg-app-accent text-white font-bold text-lg rounded-2xl shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:shadow-[0_0_40px_rgba(99,102,241,0.6)] transition-all active:scale-[0.98]"
           >
             알림 받고 시작하기
