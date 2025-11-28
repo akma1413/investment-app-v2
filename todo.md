@@ -87,17 +87,18 @@ This document breaks down the "Data Consistency" and "Navigation Logic" fixes in
 > **🔔 NEW TASKS (Requested on YYYY-MM-DD)**
 > 다음 작업들은 사용자 피드백을 반영한 개선 및 버그 수정 사항입니다. 순차적으로 진행해주세요.
 
-## ✅ Task 6: Redesign Splash Screen (Loading)
+## ✅ Task 6: Redesign Splash Screen (Logo & Tagline)
 **Target File:** `src/components/onboarding/OnboardingFlow.tsx` (step === 'splash')
-**Goal:** Replace the current icon and small text with a bold, text-only logo.
+**Goal:** Replace the current icon with a bold text logo and a meaningful tagline.
 
 **Instructions:**
-1.  Remove the existing logo icon container (`<Layers size={48} ... />`).
-2.  Remove the subtitle paragraph ("논리적 투자 에이전트").
-3.  Replace the `<h1>Hypo</h1>` with a large, stylized text logo.
-    * **Text:** "Hypo"
-    * **Style:** Use a very large, bold font. Apply a gradient color (e.g., `bg-gradient-to-r from-indigo-400 to-indigo-600`) and use `bg-clip-text text-transparent`.
-    * **ClassName example:** `text-7xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent`
+1.  **Remove Icon:** Delete the existing `Layers` icon container.
+2.  **Main Logo:**
+    * Render the text **"Hypo"** in a very large size.
+    * **Style:** `text-7xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent`.
+3.  **Add Tagline:**
+    * Below the logo, add the core message: **"자극과 충동이 아닌 논리와 스토리로 투자하기"**
+    * **Style:** `text-xl text-zinc-400 mt-4 font-medium tracking-tight`.
 
 ## ✅ Task 7: Update Onboarding Final Step Copy
 **Target File:** `src/components/onboarding/OnboardingFlow.tsx` (step === 'permission')

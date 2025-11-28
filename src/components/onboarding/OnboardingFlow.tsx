@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { Camera, Bell, Check, Layers, ArrowRight, X, ChevronRight, HelpCircle, Quote, Info, SkipForward, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { useStore, ALL_STOCKS } from '../../contexts/StoreContext';
@@ -165,10 +164,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       
       {/* --- STEP 1: SPLASH --- */}
       {step === 'splash' && (
-        <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 text-center px-6">
-          <h1 className="text-7xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">
-            Hypo
-          </h1>
+        <div className="w-full h-full flex flex-col items-center justify-center animate-in fade-in duration-1000 text-center px-6 gap-8">
+          {/* Logo Wrapper to handle spacing and clipping safety */}
+          <div className="relative py-2">
+            <h1 className="text-7xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent leading-none pb-2">
+              Hypo
+            </h1>
+          </div>
+          {/* Tagline */}
+          <p className="text-lg sm:text-xl text-zinc-200 font-medium tracking-tight relative z-10">
+            자극과 충동이 아닌 논리와 스토리로 투자하기
+          </p>
         </div>
       )}
 
