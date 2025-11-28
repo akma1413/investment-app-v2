@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { useStore } from '../contexts/StoreContext';
 import { Cloud, Cpu, Server, Car, Scale, Lightbulb, ChevronRight, Clock, AlertCircle } from 'lucide-react';
@@ -27,7 +26,15 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    // If large number, likely KRW, otherwise USD logic but simple locale string for now
+    if (value > 1000) return value.toLocaleString('ko-KR') + '원';
+    return '$' + value.toLocaleString();
+  };
+
+  // Helper to find actual holding data
+  const getHoldingData = (ticker: string) => {
+    const allHoldings = [...user.holdings.domestic, ...user.holdings.overseas];
+    return allHoldings.find(h => h.ticker === ticker);
   };
 
   return (
@@ -42,6 +49,9 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
            const isInvested = stock.status === 'Invested';
            const isUrgent = stock.events.some(e => e.impact === 'High' && (e.dDay === 'D-1' || e.dDay === 'Today'));
            const urgentEvent = stock.events.find(e => e.impact === 'High');
+           
+           // Fetch holding info if invested
+           const holding = isInvested ? getHoldingData(stock.ticker) : null;
 
            return (
             <div 
@@ -71,20 +81,35 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
                 </div>
               )}
 
-              {/* Top Row */}
+              {/* Top Row: Name & Main Metric */}
               <div className="flex justify-between items-start mb-5 relative">
                 <div>
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className={`text-2xl font-bold ${isInvested ? 'text-white' : 'text-zinc-300'}`}>{stock.ticker}</span>
+                  <div className="flex items-center space-x-2 mb-0.5">
+                    {/* Primary Name (Korean) */}
+                    <span className={`text-2xl font-bold ${isInvested ? 'text-white' : 'text-zinc-300'}`}>{stock.name}</span>
                     {isUrgent && <div className="w-2 h-2 rounded-full bg-app-positive animate-ping" />}
                   </div>
-                  <span className="text-base text-zinc-500 font-medium">{stock.name}</span>
+                  {/* Secondary Ticker */}
+                  <span className="text-sm text-zinc-500 font-bold tracking-wide">{stock.ticker}</span>
                 </div>
+                
                 <div className="text-right mt-1">
-                  <div className={`text-2xl font-bold mb-1 ${isInvested ? 'text-white' : 'text-zinc-400'}`}>{formatCurrency(stock.currentPrice)}</div>
-                  <div className={`text-base font-bold flex items-center justify-end ${stock.changeRate >= 0 ? 'text-app-positive' : 'text-app-negative'}`}>
-                    {stock.changeRate > 0 ? '+' : ''}{stock.changeRate}%
-                  </div>
+                  {/* Metric Logic: Holding Valuation if Invested, Price if Watching */}
+                  {isInvested && holding ? (
+                    <>
+                      <div className="text-xl font-bold text-white mb-0.5">{formatCurrency(holding.valuation)}</div>
+                      <div className={`text-sm font-bold flex items-center justify-end ${holding.profitRate >= 0 ? 'text-app-positive' : 'text-app-negative'}`}>
+                        {holding.profitRate > 0 ? '+' : ''}{holding.profitRate}%
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-xl font-bold text-zinc-400 mb-0.5">{formatCurrency(stock.currentPrice)}</div>
+                      <div className={`text-sm font-bold flex items-center justify-end ${stock.changeRate >= 0 ? 'text-app-positive' : 'text-app-negative'}`}>
+                        {stock.changeRate > 0 ? '+' : ''}{stock.changeRate}%
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 

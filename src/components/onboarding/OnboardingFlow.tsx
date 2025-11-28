@@ -1,10 +1,12 @@
+
+
 import React, { useState, useEffect } from 'react';
-import { Camera, Bell, Check, Layers, ArrowRight, X, ChevronRight, HelpCircle, Quote, Info, SkipForward, BookOpen } from 'lucide-react';
+import { Camera, Bell, Check, Layers, ArrowRight, X, ChevronRight, HelpCircle, Quote, Info, SkipForward, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { useStore, ALL_STOCKS } from '../../contexts/StoreContext';
-import { QuizCategory, SearchResultSample } from '../../types';
+import { QuizCategory, SearchResultSample, Thesis } from '../../types';
 
 interface OnboardingFlowProps {
-  onComplete: () => void;
+  onComplete: (stock?: Thesis) => void;
 }
 
 type Step = 
@@ -35,6 +37,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   // Quiz State
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [selectedLogics, setSelectedLogics] = useState<number[]>([]);
+  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
   // Splash Timer
   useEffect(() => {
@@ -73,6 +76,11 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
        }
     }
   }, [step, scanComplete, data.user.holdings]);
+
+  // Reset Info Expanded on question change
+  useEffect(() => {
+    setIsInfoExpanded(false);
+  }, [currentQuizIndex]);
 
   const handleNameSubmit = () => {
     if (name.trim().length > 0) {
@@ -129,14 +137,27 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const handleFinalComplete = () => {
       if (selectedStock) {
           // Save to store
-          addToMyThesis(
+          const newThesis = addToMyThesis(
               selectedStock,
               selectedLogics,
               'Invested', // Defaulting to invested since it came from holdings
               '100만원 미만' // Default amount or collected in a new step if needed
           );
-          onComplete();
+          onComplete(newThesis);
+      } else {
+        onComplete();
       }
+  };
+
+  // Helper to parse bold text from content string (e.g. "This is *bold* text")
+  const renderParsedContent = (text: string) => {
+    const parts = text.split(/(\*.*?\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('*') && part.endsWith('*')) {
+        return <span key={i} className="text-white font-bold">{part.slice(1, -1)}</span>;
+      }
+      return <span key={i}>{part}</span>;
+    });
   };
 
   return (
@@ -145,11 +166,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       {/* --- STEP 1: SPLASH --- */}
       {step === 'splash' && (
         <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 text-center px-6">
-          <div className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-indigo-700 rounded-[2rem] mb-8 animate-pulse shadow-[0_0_50px_rgba(99,102,241,0.4)] flex items-center justify-center">
-            <Layers size={48} className="text-white" />
-          </div>
-          <h1 className="text-4xl font-black leading-tight mb-2 tracking-tight">감이 아닌, 논리로.</h1>
-          <p className="text-zinc-400 font-medium">가설 검증 기반 투자 솔루션</p>
+          <h1 className="text-7xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">
+            Hypo
+          </h1>
         </div>
       )}
 
@@ -380,7 +399,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             {/* Scrollable Question Area */}
             <div className="flex-1 px-6 overflow-y-auto pb-10">
                
-               {/* NEW: Context Card */}
+               {/* Context Card */}
                {currentQuestion.backgroundContext && (
                   <div className="mb-6 p-5 bg-[#1E1E1E] border border-white/10 rounded-2xl animate-in slide-in-from-bottom-2">
                      <div className="flex items-center space-x-2 mb-3 text-indigo-400">
@@ -399,7 +418,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                </h2>
 
                {/* Options List */}
-               <div className="space-y-3">
+               <div className="space-y-3 mb-8">
                   {currentQuestion?.options.map((option, idx) => (
                      <button
                        key={idx}
@@ -411,16 +430,37 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                          }`}
                      >
                        <span className="text-lg font-medium">{option.text}</span>
-                       {option.type === 'idk' ? (
-                          <div className="flex items-center text-sm font-bold text-app-accent opacity-70 group-hover:opacity-100 transition-opacity">
-                             힌트 보기 <BookOpen size={18} className="ml-1" />
-                          </div>
-                       ) : (
-                          <ArrowRight size={20} className="text-zinc-600 group-hover:text-white" />
-                       )}
+                       <ArrowRight size={20} className={`group-hover:text-white transition-colors ${option.type === 'idk' ? 'text-zinc-600' : 'text-zinc-500'}`} />
                      </button>
                   ))}
                </div>
+
+               {/* Related Info Toggle (New) */}
+               {currentQuestion.relatedInfo && (
+                 <div className="animate-in fade-in slide-in-from-bottom-4">
+                   <button 
+                     onClick={() => setIsInfoExpanded(!isInfoExpanded)}
+                     className="flex items-center space-x-2 text-zinc-500 hover:text-white font-bold text-sm transition-colors mb-2"
+                   >
+                     <span>관련 내용 보기</span>
+                     {isInfoExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                   </button>
+                   
+                   {isInfoExpanded && (
+                     <div className="bg-white/5 p-5 rounded-xl border border-white/5 animate-in zoom-in-95 duration-200">
+                        <h4 className="text-base font-bold text-app-accent mb-3">{currentQuestion.relatedInfo.title}</h4>
+                        <ul className="space-y-2">
+                          {currentQuestion.relatedInfo.content.map((point, i) => (
+                            <li key={i} className="text-zinc-300 text-sm leading-relaxed flex items-start">
+                              <span className="mr-2 mt-1.5 w-1 h-1 bg-zinc-500 rounded-full shrink-0" />
+                              <span>{renderParsedContent(point)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                     </div>
+                   )}
+                 </div>
+               )}
             </div>
         </div>
       )}
@@ -434,13 +474,12 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             </div>
             
             <h2 className="text-3xl font-bold leading-tight mb-4">
-              시세가 아니라,<br/>
-              <span className="text-app-accent">'내 가설'이 바뀔 때</span><br/>
+              단순한 시세 변동이 아니라<br/>
+              <span className="text-app-accent">내 가설에 대한 시사점</span>을<br/>
               알려드릴게요.
             </h2>
             <p className="text-zinc-400 text-lg">
-              의미 없는 가격 변동 알림으로<br/>
-              방해하지 않겠다고 약속합니다.
+              "{data.user.name}님의 판단을 기다립니다."
             </p>
           </div>
 

@@ -49,8 +49,10 @@ export interface SummaryHighlight {
 // --- LOGIC & THESIS ---
 export interface LogicHistoryItem {
   date: string;
-  type: 'Positive' | 'Negative' | 'Neutral';
+  type: 'Positive' | 'Negative' | 'Neutral' | 'Success' | 'Failure'; // Extended for Decision Logs
+  category?: 'News' | 'Decision'; // To distinguish type of log
   text: string; // e.g., "Earnings beat expectations supporting this"
+  badgeText?: string; // e.g. "+5% Saved"
 }
 
 export interface LogicBlock {
@@ -135,9 +137,9 @@ export interface QuizQuestion {
   question: string;
   backgroundContext?: string; // Explains the "Why" before the question
   options: QuizOption[];
-  learningContext?: {
-    targetTab: 'profile' | 'chart' | 'news'; // Where to go to learn
-    hint: string; // Text to show when returning from learning
+  relatedInfo?: {
+    title: string;
+    content: string[]; // Supports *bold* parsing
   };
 }
 
@@ -247,5 +249,5 @@ export interface StoreContextType {
   markNotificationAsRead: (id: number) => void;
   searchStocks: (query: string) => void;
   selectDiscoveryStock: (ticker: string) => void;
-  addToMyThesis: (stock: SearchResultSample, selectedLogicIds: number[], investmentType: string, amount?: string) => void;
+  addToMyThesis: (stock: SearchResultSample, selectedLogicIds: number[], investmentType: string, amount?: string) => Thesis;
 }

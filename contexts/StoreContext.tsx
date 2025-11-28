@@ -30,7 +30,7 @@ const generateChart = (startPrice: number, count: number, trend: 'up' | 'down' |
 export const ALL_STOCKS: SearchResultSample[] = [
   {
     ticker: "GOOGL",
-    name: "Google",
+    name: "구글",
     currentPrice: 175.4,
     changeRate: -1.2,
     companyProfile: {
@@ -231,7 +231,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "AMZN",
-    name: "Amazon",
+    name: "아마존",
     currentPrice: 180.5,
     changeRate: 1.5,
     companyProfile: { summary: "이커머스와 클라우드의 제왕", description: "세계 최대 온라인 쇼핑몰이자 AWS를 통한 클라우드 1위 기업입니다." },
@@ -266,7 +266,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "NVDA",
-    name: "NVIDIA",
+    name: "엔비디아",
     currentPrice: 950.0,
     changeRate: 2.5,
     companyProfile: { summary: "AI 시대의 총아, GPU 리더", description: "AI 데이터센터에 들어가는 GPU 시장을 사실상 독점하고 있습니다." },
@@ -338,7 +338,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "035420",
-    name: "NAVER",
+    name: "네이버",
     currentPrice: 192000,
     changeRate: -0.5,
     companyProfile: {
@@ -361,7 +361,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "LS",
-    name: "LS ELECTRIC",
+    name: "LS일렉트릭",
     currentPrice: 170000,
     changeRate: 3.2,
     companyProfile: { summary: "전력망 인프라의 강자", description: "북미 전력망 교체 수요와 AI 데이터센터 수혜를 동시에 받고 있습니다." },
@@ -371,7 +371,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "LLY",
-    name: "Eli Lilly",
+    name: "일라이 릴리",
     currentPrice: 780.0,
     changeRate: 0.8,
     companyProfile: { summary: "비만치료제 시장의 선두주자", description: "마운자로, 젭바운드 등 혁신적인 비만/당뇨 치료제로 글로벌 제약사 시가총액 1위를 다툽니다." },
@@ -381,7 +381,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "NVO",
-    name: "Novo Nordisk",
+    name: "노보 노디스크",
     currentPrice: 125.0,
     changeRate: 1.1,
     companyProfile: { summary: "위고비의 원조", description: "비만치료제 열풍을 불러온 위고비 개발사로 유럽 시총 1위 기업입니다." },
@@ -446,7 +446,7 @@ const initialData: AppData = {
         {
           id: 'o1',
           ticker: 'GOOGL',
-          name: 'Google',
+          name: '구글',
           quantity: 98,
           currency: 'USD',
           valuation: 23520000,
@@ -456,7 +456,7 @@ const initialData: AppData = {
         {
           id: 'o2',
           ticker: 'AMZN',
-          name: 'Amazon',
+          name: '아마존',
           quantity: 33,
           currency: 'USD',
           valuation: 8250000,
@@ -466,7 +466,7 @@ const initialData: AppData = {
         {
           id: 'o3',
           ticker: 'NVDA',
-          name: 'NVIDIA',
+          name: '엔비디아',
           quantity: 10,
           currency: 'USD',
           valuation: 12400000,
@@ -515,7 +515,7 @@ const initialData: AppData = {
     {
       id: 1,
       ticker: "GOOGL",
-      name: "Google",
+      name: "구글",
       currentPrice: 175.4,
       changeRate: -1.2,
       status: "Invested",
@@ -676,7 +676,7 @@ const initialData: AppData = {
   ],
   discovery: {
     recentSearches: [
-      { id: 101, ticker: "GOOGL", name: "Google", date: "Just now" }
+      { id: 101, ticker: "GOOGL", name: "구글", date: "Just now" }
     ],
     searchResults: [],
     trendingLogics: [
@@ -698,7 +698,7 @@ const initialData: AppData = {
         keyword: "전력", 
         relatedStocksDetails: [
            { ticker: "HD현대", name: "HD현대일렉트릭", rate: 4.5 },
-           { ticker: "LS", name: "LS ELECTRIC", rate: 3.2 }
+           { ticker: "LS", name: "LS일렉트릭", rate: 3.2 }
         ],
         title: "전력 슈퍼사이클",
         subtitle: "AI 데이터센터가 불러온 전력 설비 품귀 현상",
@@ -710,8 +710,8 @@ const initialData: AppData = {
         rank: 3, 
         keyword: "비만치료제", 
         relatedStocksDetails: [
-          { ticker: "LLY", name: "Eli Lilly", rate: 0.8 },
-          { ticker: "NVO", name: "Novo Nordisk", rate: 1.1 }
+          { ticker: "LLY", name: "일라이 릴리", rate: 0.8 },
+          { ticker: "NVO", name: "노보 노디스크", rate: 1.1 }
         ],
         title: "비만 치료제 혁명",
         subtitle: "없어서 못 파는 GLP-1, 적응증 확대로 시장 확장",

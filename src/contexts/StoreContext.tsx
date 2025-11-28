@@ -1,3 +1,6 @@
+
+
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AppData, StoreContextType, SearchResultSample, Thesis, LogicBlock, TimeFrame } from '../types';
 
@@ -29,7 +32,7 @@ const generateChart = (startPrice: number, count: number, trend: 'up' | 'down' |
 export const ALL_STOCKS: SearchResultSample[] = [
   {
     ticker: "GOOGL",
-    name: "Google",
+    name: "구글",
     currentPrice: 175.4,
     changeRate: -1.2,
     companyProfile: {
@@ -53,7 +56,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
           { text: "AI 결합으로 검색 시장을 더 키울 것이다.", type: 'bull', relatedLogicId: 1 },
           { text: "잘 모르겠어요", type: 'idk' }
         ],
-        learningContext: { targetTab: 'profile', hint: "구글의 검색 점유율 추이를 확인해보세요." }
+        relatedInfo: {
+          title: "검색 시장의 변화",
+          content: [
+            "구글은 *90% 이상의 검색 점유율*을 20년 가까이 유지해왔습니다.",
+            "하지만 챗GPT와 같은 *생성형 AI*가 정답을 바로 알려주면서 검색 패턴이 바뀌고 있습니다.",
+            "유튜브와 안드로이드 생태계가 강력한 *방어막(Lock-in)* 역할을 하고 있습니다."
+          ]
+        }
       },
       {
         id: 2,
@@ -63,7 +73,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
           { text: "AI 붐 타고 2위로 도약할 것이다.", type: 'bull', relatedLogicId: 2 },
           { text: "만년 3위에 머무를 것이다.", type: 'bear', relatedLogicId: 3 },
           { text: "잘 모르겠어요", type: 'idk' }
-        ]
+        ],
+        relatedInfo: {
+          title: "클라우드 3강 구도",
+          content: [
+            "AWS(아마존)와 Azure(MS)가 시장을 주도하고 있지만, 구글 클라우드는 *AI 기술력*을 바탕으로 빠르게 성장 중입니다.",
+            "최근 분기 *영업이익률이 흑자 전환*하며 수익성이 크게 개선되었습니다."
+          ]
+        }
       },
       {
         id: 3,
@@ -73,7 +90,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
           { text: "기업 분할까지 갈 심각한 악재다.", type: 'bear', relatedLogicId: 3 },
           { text: "단기 노이즈일 뿐이다.", type: 'bull', relatedLogicId: 1 },
           { text: "잘 모르겠어요", type: 'idk' }
-        ]
+        ],
+        relatedInfo: {
+          title: "규제 리스크의 본질",
+          content: [
+            "미 법무부는 구글이 *불법적인 계약*으로 경쟁을 막았다고 주장합니다.",
+            "최악의 경우 *사업 부문 매각* 명령이 내려질 수 있으나, 실제 분할까지는 *수년이 걸리는 지루한 법정 공방*이 예상됩니다."
+          ]
+        }
       },
       {
         id: 4,
@@ -83,7 +107,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
           { text: "경쟁사와의 기술 격차를 해소했다.", type: 'bull', relatedLogicId: 1 },
           { text: "여전히 오류가 많아 실망스럽다.", type: 'bear', relatedLogicId: 4 },
           { text: "잘 모르겠어요", type: 'idk' }
-        ]
+        ],
+        relatedInfo: {
+          title: "제미나이의 경쟁력",
+          content: [
+            "GPT-4와 대등한 성능을 보이며 *기술 격차 우려*를 해소했습니다.",
+            "구글의 방대한 *유튜브 데이터*를 학습에 활용할 수 있다는 점이 강력한 무기입니다."
+          ]
+        }
       }
     ]
   },
@@ -114,7 +145,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
             { text: "승자독식 구조로 시장을 지배할 것이다.", type: 'bull', relatedLogicId: 10 },
             { text: "점유율을 지속적으로 뺏길 것이다.", type: 'bear', relatedLogicId: 11 },
             { text: "잘 모르겠어요", type: 'idk' }
-          ]
+          ],
+          relatedInfo: {
+            title: "중국 전기차의 위협",
+            content: [
+              "BYD 등 중국 기업들이 *압도적인 가격 경쟁력*으로 시장을 잠식하고 있습니다.",
+              "테슬라는 이에 맞서 *가격 인하 정책*을 펼치며 점유율 방어에 나섰습니다."
+            ]
+          }
         },
         {
           id: 2,
@@ -124,7 +162,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
              { text: "곧 로보택시로 수익화가 가능하다.", type: 'bull', relatedLogicId: 12 },
              { text: "기술적, 규제적 장벽이 여전히 높다.", type: 'bear', relatedLogicId: 13 },
              { text: "잘 모르겠어요", type: 'idk' }
-          ]
+          ],
+          relatedInfo: {
+            title: "FSD 수익화 시점",
+            content: [
+              "일론 머스크는 FSD가 *완전 자율주행*에 도달하면 기업 가치가 폭발할 것이라 주장합니다.",
+              "하지만 규제 승인과 기술적 완성도 문제로 *상용화 시점은 계속 지연*되고 있습니다."
+            ]
+          }
         },
         {
           id: 3,
@@ -134,7 +179,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
              { text: "혁신의 원동력이다.", type: 'bull', relatedLogicId: 14 },
              { text: "브랜드 가치를 심각하게 훼손한다.", type: 'bear', relatedLogicId: 15 },
              { text: "잘 모르겠어요", type: 'idk' }
-          ]
+          ],
+          relatedInfo: {
+            title: "오너 리스크의 양면성",
+            content: [
+              "일론 머스크의 잦은 돌발 행동과 *정치적 발언*은 브랜드 이미지에 타격을 줍니다.",
+              "하지만 그의 *강력한 추진력* 없이는 테슬라의 혁신도 불가능했다는 평가가 공존합니다."
+            ]
+          }
         },
         {
           id: 4,
@@ -144,7 +196,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
              { text: "기대 이상의 반등이 나올 것이다.", type: 'bull', relatedLogicId: 10 },
              { text: "기대를 하회할 것이다.", type: 'bear', relatedLogicId: 11 },
              { text: "잘 모르겠어요", type: 'idk' }
-          ]
+          ],
+          relatedInfo: {
+            title: "인도량의 의미",
+            content: [
+              "차량 인도량은 테슬라의 *성장성*을 보여주는 가장 직접적인 지표입니다.",
+              "최근 고금리로 인한 *수요 둔화*가 인도량 감소로 이어지고 있습니다."
+            ]
+          }
         },
         {
           id: 5,
@@ -154,7 +213,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
              { text: "판매량 반등이 늦어질 악재다.", type: 'bear', relatedLogicId: 11 },
              { text: "로보택시에 집중하는 전략적 선택이다.", type: 'bull', relatedLogicId: 12 },
              { text: "잘 모르겠어요", type: 'idk' }
-          ]
+          ],
+          relatedInfo: {
+            title: "저가형 모델의 중요성",
+            content: [
+              "2만 5천 달러 대의 저가형 모델은 *전기차 대중화*의 기폭제가 될 것입니다.",
+              "이 모델의 출시가 늦어지면 *성장 정체기*가 길어질 수 있습니다."
+            ]
+          }
         }
     ]
   },
@@ -175,7 +241,59 @@ export const ALL_STOCKS: SearchResultSample[] = [
       { id: 23, icon: 'AlertTriangle', title: "경쟁사 추격", desc: "삼성전자의 진입으로 점유율이 하락할 수 있습니다." },
       { id: 24, icon: 'Globe', title: "시장 파이 확대", desc: "경쟁사의 진입은 전체 HBM 시장이 커진다는 신호입니다." }
     ],
-    quizData: []
+    quizData: [
+        {
+          id: 1,
+          category: 'LongTerm',
+          question: "[AI 사이클] 반도체 슈퍼사이클은\n얼마나 갈까요?",
+          options: [
+             { text: "3년 이상 공급부족이 지속될 것이다.", type: 'bull', relatedLogicId: 20 },
+             { text: "곧 고점이 올 것이다.", type: 'bear', relatedLogicId: 21 },
+             { text: "잘 모르겠어요", type: 'idk' }
+          ],
+          relatedInfo: {
+            title: "반도체 슈퍼사이클",
+            content: [
+              "과거 사이클과 달리 *AI라는 새로운 수요*가 시장을 견인하고 있습니다.",
+              "HBM은 일반 메모리보다 *가격이 5배 이상 비싸* 수익성 개선에 기여합니다."
+            ]
+          }
+        },
+        {
+          id: 2,
+          category: 'LongTerm',
+          question: "[기술 격차] HBM 시장 1등\n수성 가능할까요?",
+          options: [
+             { text: "기술 격차를 유지할 것이다.", type: 'bull', relatedLogicId: 22 },
+             { text: "경쟁사에게 추격을 허용할 것이다.", type: 'bear', relatedLogicId: 23 },
+             { text: "잘 모르겠어요", type: 'idk' }
+          ],
+          relatedInfo: {
+            title: "HBM 기술 격차",
+            content: [
+              "하이닉스는 경쟁사보다 먼저 *MR-MUF 공정*을 도입해 수율을 잡았습니다.",
+              "엔비디아에 *사실상 독점 공급*하며 기술 리더십을 증명했습니다."
+            ]
+          }
+        },
+        {
+          id: 3,
+          category: 'ShortTerm',
+          question: "[경쟁사 이슈] 삼성전자의\n엔비디아 퀄 테스트 통과설",
+          options: [
+             { text: "공급 과잉 우려가 있다.", type: 'bear', relatedLogicId: 23 },
+             { text: "시장 파이 확대의 호재다.", type: 'bull', relatedLogicId: 24 },
+             { text: "잘 모르겠어요", type: 'idk' }
+          ],
+          relatedInfo: {
+            title: "삼성전자의 추격",
+            content: [
+              "삼성전자가 *HBM3E* 개발에 성공하며 맹추격하고 있습니다.",
+              "하지만 수율 안정화와 *고객사 신뢰 확보*에는 시간이 걸릴 것으로 보입니다."
+            ]
+          }
+        }
+    ]
   },
   {
     ticker: "005930",
@@ -199,23 +317,101 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "AMZN",
-    name: "Amazon",
+    name: "아마존",
     currentPrice: 180.5,
     changeRate: 1.5,
     companyProfile: { summary: "이커머스와 클라우드의 제왕", description: "세계 최대 온라인 쇼핑몰이자 AWS를 통한 클라우드 1위 기업입니다." },
     chartContext: "클라우드 성장세 재확인으로 주가가 견조합니다.",
-    availableLogicBlocks: [],
-    quizData: []
+    availableLogicBlocks: [
+      { id: 30, icon: 'Cloud', title: "AWS의 AI 주도권", desc: "클라우드 1위 AWS가 생성형 AI 수요를 흡수하며 재성장할 것입니다." },
+      { id: 31, icon: 'TrendingUp', title: "물류 마진 개선", desc: "물류 효율화 프로젝트 완료로 소매 부문 이익률이 구조적으로 개선 중입니다." },
+      { id: 32, icon: 'AlertTriangle', title: "MS의 추격", desc: "MS Azure가 AI를 무기로 클라우드 점유율을 빠르게 뺏어오고 있습니다." }
+    ],
+    quizData: [
+        {
+          id: 1,
+          category: 'LongTerm',
+          question: "[클라우드] MS Azure의 맹추격,\nAWS는 안전할까요?",
+          options: [
+            { text: "1위 자리를 굳건히 지킬 것이다.", type: 'bull', relatedLogicId: 30 },
+            { text: "AI 경쟁력 부족으로 점유율을 뺏길 것이다.", type: 'bear', relatedLogicId: 32 },
+            { text: "잘 모르겠어요", type: 'idk' }
+          ],
+          relatedInfo: {
+            title: "클라우드 시장 전망",
+            content: [
+              "기업들의 *AI 도입*이 늘어나며 클라우드 인프라 수요가 폭증하고 있습니다.",
+              "아마존은 *자체 AI 칩(Trainium)*을 개발해 비용 효율을 높이고 있습니다."
+            ]
+          }
+        },
+        {
+          id: 2,
+          category: 'ShortTerm',
+          question: "[수익성] 물류 인프라 투자가\n마무리 단계입니다.",
+          options: [
+             { text: "이제 이익을 회수할 시기다 (마진 개선).", type: 'bull', relatedLogicId: 31 },
+             { text: "경기 침체로 소비가 둔화될 것이다.", type: 'bear', relatedLogicId: 32 },
+             { text: "잘 모르겠어요", type: 'idk' }
+          ],
+          relatedInfo: {
+            title: "물류 효율화",
+            content: [
+              "코로나 기간 동안 과잉 투자했던 *물류 센터*를 정리하며 비용을 줄였습니다.",
+              "지역 거점 배송 시스템 도입으로 *배송 속도와 수익성*을 동시에 잡았습니다."
+            ]
+          }
+        }
+    ]
   },
   {
     ticker: "NVDA",
-    name: "NVIDIA",
+    name: "엔비디아",
     currentPrice: 950.0,
     changeRate: 2.5,
     companyProfile: { summary: "AI 시대의 총아, GPU 리더", description: "AI 데이터센터에 들어가는 GPU 시장을 사실상 독점하고 있습니다." },
     chartContext: "AI 수요 폭증으로 기록적인 상승세를 보이고 있습니다.",
-    availableLogicBlocks: [],
-    quizData: []
+    availableLogicBlocks: [
+      { id: 40, icon: 'Cpu', title: "AI 칩 독점 지속", desc: "CUDA 생태계와 압도적 성능으로 시장 지배력이 3년 이상 지속될 것입니다." },
+      { id: 41, icon: 'TrendingDown', title: "수요 피크 아웃", desc: "빅테크들의 AI 투자가 줄어들면 칩 수요가 급감할 수 있습니다." },
+      { id: 42, icon: 'AlertTriangle', title: "경쟁 심화", desc: "AMD와 빅테크 자체 칩 개발로 점유율이 희석될 것입니다." }
+    ],
+    quizData: [
+        {
+          id: 1,
+          category: 'LongTerm',
+          question: "[독점력] 엔비디아의 독주 체제,\n언제까지 갈까요?",
+          options: [
+            { text: "CUDA 생태계 때문에 대체 불가능하다.", type: 'bull', relatedLogicId: 40 },
+            { text: "빅테크들이 자체 칩을 만들어 탈출할 것이다.", type: 'bear', relatedLogicId: 42 },
+            { text: "잘 모르겠어요", type: 'idk' }
+          ],
+          relatedInfo: {
+            title: "CUDA 생태계",
+            content: [
+              "엔비디아 GPU를 쓰려면 *CUDA 소프트웨어*를 써야 합니다.",
+              "전 세계 AI 개발자들이 이미 CUDA에 익숙해져 있어 *쉽게 갈아타기 힘든 구조*입니다."
+            ]
+          }
+        },
+        {
+          id: 2,
+          category: 'ShortTerm',
+          question: "[수요] 빅테크들의 AI 투자가\n지속될 수 있을까요?",
+          options: [
+             { text: "AI 경쟁은 이제 시작이다. 수요는 계속된다.", type: 'bull', relatedLogicId: 40 },
+             { text: "수익 모델 부재로 투자가 곧 줄어들 것이다.", type: 'bear', relatedLogicId: 41 },
+             { text: "잘 모르겠어요", type: 'idk' }
+          ],
+          relatedInfo: {
+            title: "빅테크 투자 지속성",
+            content: [
+              "MS, 구글, 메타가 AI 주도권을 잡기 위해 *천문학적인 돈*을 쏟아붓고 있습니다.",
+              "이 경쟁이 멈추지 않는 한 엔비디아 칩 수요는 *당분간 꺾이지 않을 것*입니다."
+            ]
+          }
+        }
+    ]
   },
   {
     ticker: "AMD",
@@ -237,7 +433,14 @@ export const ALL_STOCKS: SearchResultSample[] = [
             { text: "빅테크들의 멀티 벤더 수요로 성장할 것이다.", type: 'bull', relatedLogicId: 100 },
             { text: "기술 격차가 너무 커서 힘들다.", type: 'bear', relatedLogicId: 101 },
             { text: "잘 모르겠어요", type: 'idk' }
-          ]
+          ],
+          relatedInfo: {
+            title: "AMD의 기회",
+            content: [
+              "엔비디아 칩 부족 사태로 인해 *대안*을 찾는 기업들이 늘고 있습니다.",
+              "AMD의 MI300X는 엔비디아 대비 *가격이 저렴*하면서도 성능은 준수하다는 평가입니다."
+            ]
+          }
         }
     ]
   },
@@ -256,7 +459,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "035420",
-    name: "NAVER",
+    name: "네이버",
     currentPrice: 192000,
     changeRate: -0.5,
     companyProfile: {
@@ -279,7 +482,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "LS",
-    name: "LS ELECTRIC",
+    name: "LS일렉트릭",
     currentPrice: 170000,
     changeRate: 3.2,
     companyProfile: { summary: "전력망 인프라의 강자", description: "북미 전력망 교체 수요와 AI 데이터센터 수혜를 동시에 받고 있습니다." },
@@ -289,7 +492,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "LLY",
-    name: "Eli Lilly",
+    name: "일라이 릴리",
     currentPrice: 780.0,
     changeRate: 0.8,
     companyProfile: { summary: "비만치료제 시장의 선두주자", description: "마운자로, 젭바운드 등 혁신적인 비만/당뇨 치료제로 글로벌 제약사 시가총액 1위를 다툽니다." },
@@ -299,7 +502,7 @@ export const ALL_STOCKS: SearchResultSample[] = [
   },
   {
     ticker: "NVO",
-    name: "Novo Nordisk",
+    name: "노보 노디스크",
     currentPrice: 125.0,
     changeRate: 1.1,
     companyProfile: { summary: "위고비의 원조", description: "비만치료제 열풍을 불러온 위고비 개발사로 유럽 시총 1위 기업입니다." },
@@ -364,7 +567,7 @@ const initialData: AppData = {
         {
           id: 'o1',
           ticker: 'GOOGL',
-          name: 'Google',
+          name: '구글',
           quantity: 98,
           currency: 'USD',
           valuation: 23520000,
@@ -374,7 +577,7 @@ const initialData: AppData = {
         {
           id: 'o2',
           ticker: 'AMZN',
-          name: 'Amazon',
+          name: '아마존',
           quantity: 33,
           currency: 'USD',
           valuation: 8250000,
@@ -384,7 +587,7 @@ const initialData: AppData = {
         {
           id: 'o3',
           ticker: 'NVDA',
-          name: 'NVIDIA',
+          name: '엔비디아',
           quantity: 10,
           currency: 'USD',
           valuation: 12400000,
@@ -433,7 +636,7 @@ const initialData: AppData = {
     {
       id: 1,
       ticker: "GOOGL",
-      name: "Google",
+      name: "구글",
       currentPrice: 175.4,
       changeRate: -1.2,
       status: "Invested",
@@ -443,8 +646,28 @@ const initialData: AppData = {
           description: "구글은 우리가 궁금한 것을 검색할 때 쓰는 검색창뿐만 아니라, 유튜브, 안드로이드, 그리고 구글 클라우드까지 운영하는 거대 IT 기업입니다."
       },
       logicBlocks: [
-        { id: 'l1', icon: "Cloud", title: "클라우드 성장", desc: "기업들의 AI 도입으로 클라우드 매출 매년 20% 성장", isActive: true },
-        { id: 'l2', icon: "Cpu", title: "자체 칩(TPU) 효과", desc: "외부 칩 의존도를 낮춰 마진율 개선", isActive: true }
+        { 
+            id: 'l1', 
+            icon: "Cloud", 
+            title: "클라우드 성장", 
+            desc: "기업들의 AI 도입으로 클라우드 매출 매년 20% 성장", 
+            isActive: true,
+            history: [
+                { date: '24.10.15', type: 'Success', category: 'Decision', text: '주가 하락 방어 성공', badgeText: '+5% 손실 회피' },
+                { date: '24.10.01', type: 'Positive', category: 'News', text: '3분기 클라우드 매출 28% 증가 (예상 상회)' },
+                { date: '24.09.20', type: 'Neutral', category: 'News', text: '경쟁사 MS Azure 성장률 둔화' }
+            ]
+        },
+        { 
+            id: 'l2', 
+            icon: "Cpu", 
+            title: "자체 칩(TPU) 효과", 
+            desc: "외부 칩 의존도를 낮춰 마진율 개선", 
+            isActive: true,
+            history: [
+                 { date: '24.08.12', type: 'Negative', category: 'News', text: '초기 수율 문제 관련 루머 확산' }
+            ]
+        }
       ],
       // [SCENARIO: PRE-EVENT]
       events: [
@@ -480,9 +703,13 @@ const initialData: AppData = {
               { text: "AI 결합으로 검색 시장을 더 키울 것이다.", type: 'bull', relatedLogicId: 'l2' },
               { text: "잘 모르겠어요", type: 'idk' }
             ],
-            learningContext: {
-              targetTab: 'profile',
-              hint: "구글의 검색 점유율과 유튜브의 락인(Lock-in) 효과를 확인해보세요."
+            relatedInfo: {
+              title: "검색 시장의 변화",
+              content: [
+                "구글은 *90% 이상의 검색 점유율*을 20년 가까이 유지해왔습니다.",
+                "하지만 챗GPT와 같은 *생성형 AI*가 정답을 바로 알려주면서 검색 패턴이 바뀌고 있습니다.",
+                "유튜브와 안드로이드 생태계가 강력한 *방어막(Lock-in)* 역할을 하고 있습니다."
+              ]
             }
         }
       ],
@@ -516,7 +743,16 @@ const initialData: AppData = {
           description: "자율주행(FSD)과 로봇(Optimus)을 통해 미래 모빌리티와 노동 시장을 혁신하려는 기업입니다."
       },
       logicBlocks: [
-        { id: 'l1', icon: "Car", title: "FSD v12", desc: "End-to-End 신경망 적용으로 주행 성능 획기적 개선", isActive: true }
+        { 
+            id: 'l1', 
+            icon: "Car", 
+            title: "FSD v12", 
+            desc: "End-to-End 신경망 적용으로 주행 성능 획기적 개선", 
+            isActive: true,
+            history: [
+                { date: '24.06.20', type: 'Failure', category: 'Decision', text: '매도 타이밍 놓침', badgeText: '기회 비용 발생' }
+            ] 
+        }
       ],
       // [SCENARIO: POST-EVENT]
       events: [
@@ -552,9 +788,12 @@ const initialData: AppData = {
             { text: "중국 저가 전기차 공세에 밀릴 것이다.", type: 'bear', relatedLogicId: 'l1' },
             { text: "잘 모르겠어요", type: 'idk' }
           ],
-          learningContext: {
-            targetTab: 'chart',
-            hint: "최근 마진율 추이와 중국 시장 점유율 변화를 차트에서 확인해보세요."
+          relatedInfo: {
+            title: "중국 전기차의 위협",
+            content: [
+              "BYD 등 중국 기업들이 *압도적인 가격 경쟁력*으로 시장을 잠식하고 있습니다.",
+              "테슬라는 이에 맞서 *가격 인하 정책*을 펼치며 점유율 방어에 나섰습니다."
+            ]
           }
         }
       ],
@@ -695,7 +934,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
   };
 
-  const addToMyThesis = (stock: SearchResultSample, selectedLogicIds: number[], investmentType: string, amount?: string) => {
+  const addToMyThesis = (stock: SearchResultSample, selectedLogicIds: number[], investmentType: string, amount?: string): Thesis => {
     // 1. Create Logic Blocks from selected IDs
     const selectedLogicBlocks = stock.availableLogicBlocks.filter(l => 
         selectedLogicIds.includes(Number(l.id))
@@ -753,6 +992,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             ...prev.notifications
         ]
     }));
+
+    return newThesis;
   };
 
   return (

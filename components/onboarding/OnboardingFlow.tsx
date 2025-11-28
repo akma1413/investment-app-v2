@@ -152,11 +152,9 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       {/* --- STEP 1: SPLASH --- */}
       {step === 'splash' && (
         <div className="flex flex-col items-center justify-center animate-in fade-in duration-1000 text-center px-6">
-          <div className="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-indigo-700 rounded-[2rem] mb-8 animate-pulse shadow-[0_0_50px_rgba(99,102,241,0.4)] flex items-center justify-center">
-            <Layers size={48} className="text-white" />
-          </div>
-          <h1 className="text-4xl font-black leading-tight mb-2 tracking-tight">감이 아닌, 논리로.</h1>
-          <p className="text-zinc-400 font-medium">가설 검증 기반 투자 솔루션</p>
+          <h1 className="text-7xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">
+            Hypo
+          </h1>
         </div>
       )}
 
