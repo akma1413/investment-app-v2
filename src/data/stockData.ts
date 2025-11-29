@@ -1,6 +1,5 @@
 
 import { SearchResultSample, AppData } from '../types';
-import { generateChartData } from '../utils/chartUtils';
 
 export const ALL_STOCKS: SearchResultSample[] = [
   {
@@ -38,7 +37,40 @@ export const ALL_STOCKS: SearchResultSample[] = [
           ]
         }
       },
-      // ... (Rest of Google Quiz Data would go here, kept brief for this file)
+      {
+        id: 2,
+        category: 'LongTerm',
+        question: "[클라우드] AWS와 Azure 사이에서\n구글의 위치는?",
+        options: [
+          { text: "AI 붐 타고 2위로 도약할 것이다.", type: 'bull', relatedLogicId: 2 },
+          { text: "만년 3위에 머무를 것이다.", type: 'bear', relatedLogicId: 3 },
+          { text: "잘 모르겠어요", type: 'idk' }
+        ],
+        relatedInfo: {
+            title: "클라우드 전쟁",
+            content: [
+                "아마존(AWS)이 1위, MS(Azure)가 2위, 구글이 3위입니다.",
+                "구글은 *자체 AI 기술(TPU)*을 무기로 점유율 확대를 노리고 있습니다."
+            ]
+        }
+      },
+      {
+        id: 3,
+        category: 'ShortTerm',
+        question: "[규제] 미 법무부의 '검색 독점'\n소송 리스크",
+        options: [
+          { text: "기업 분할까지 갈 심각한 악재다.", type: 'bear', relatedLogicId: 3 },
+          { text: "단기 노이즈일 뿐이다.", type: 'bull', relatedLogicId: 1 },
+          { text: "잘 모르겠어요", type: 'idk' }
+        ],
+        relatedInfo: {
+          title: "검색 독점 소송이란?",
+          content: [
+            "미 법무부가 구글의 검색 시장 독점이 불법이라고 제소한 사건입니다.",
+            "패소 시 최악의 경우, *기업 분할 명령*이 내려질 수 있어 주가 불확실성이 큽니다."
+          ]
+        }
+      }
     ]
   },
   {
@@ -77,7 +109,23 @@ export const ALL_STOCKS: SearchResultSample[] = [
             ]
           }
         },
-        // ... (Rest of Tesla Quiz Data)
+        {
+          id: 2,
+          category: 'LongTerm',
+          question: "[AI/로보택시] FSD(자율주행)는\n언제쯤 돈이 될까요?",
+          options: [
+             { text: "곧 로보택시로 수익화가 가능하다.", type: 'bull', relatedLogicId: 12 },
+             { text: "기술적, 규제적 장벽이 여전히 높다.", type: 'bear', relatedLogicId: 13 },
+             { text: "잘 모르겠어요", type: 'idk' }
+          ],
+          relatedInfo: {
+            title: "FSD 수익화 전망",
+            content: [
+              "테슬라는 자동차 판매보다 *FSD 소프트웨어 판매*로 더 큰 돈을 벌 계획입니다.",
+              "완전 자율주행이 승인되면 *로보택시* 사업이 가능해집니다."
+            ]
+          }
+        }
     ]
   },
   {
@@ -151,76 +199,10 @@ export const getInitialData = (): AppData => ({
     { text: "니 내 종목만 떨어진다고 너무 걱정 마세요.", isBold: false }
   ],
   hotIssues: [],
-  myThesis: [
-    {
-      id: 2,
-      ticker: "TSLA",
-      name: "테슬라",
-      currentPrice: 240.5,
-      changeRate: 5.2,
-      status: "Invested",
-      bigThesis: "FSD 완성이 곧 모빌리티 패권이다",
-      companyProfile: {
-          summary: "전기차를 넘어 AI 로보틱스 기업으로 진화 중",
-          description: "자율주행(FSD)과 로봇(Optimus)을 통해 미래 모빌리티와 노동 시장을 혁신하려는 기업입니다."
-      },
-      logicBlocks: [
-        { 
-            id: 'l1', 
-            icon: "Car", 
-            title: "FSD v12", 
-            desc: "End-to-End 신경망 적용으로 주행 성능 획기적 개선", 
-            isActive: true,
-            history: [
-                { date: '24.06.20', type: 'Failure', category: 'Decision', text: '매도 타이밍 놓침', badgeText: '기회 비용 발생' }
-            ] 
-        }
-      ],
-      events: [
-        { 
-            dDay: "Today", 
-            title: "실적 발표 직후", 
-            type: "Earnings", 
-            impact: "High", 
-            status: "Completed",
-            actionScenario: {
-                phase: 'Post-Event',
-                title: "어닝 쇼크? 규제 완화!",
-                description: "EPS는 예상치를 하회했으나, 컨퍼런스 콜에서 언급된 '규제 완화' 소식에 주가가 급등했습니다. 펀더멘털보다는 기대감이 지배하는 상황입니다.",
-                marketReaction: "이익 감소 악재보다 미래 비전(규제 완화) 호재에 반응하여 급등 중",
-                myHypothesisCheck: "회원님의 'FSD 가치' 가설이 시장에서 재조명받고 있습니다. 다만 실적 숫자는 아직 뒷받침되지 않았습니다.",
-                options: [
-                    { label: "상승 즐기기 (Hold)", actionType: 'hold', sentiment: 'Positive' },
-                    { label: "일부 수익 실현", actionType: 'sell', sentiment: 'Neutral' },
-                    { label: "가설 재점검 필요", actionType: 'revise', sentiment: 'Negative' }
-                ]
-            }
-        }
-      ],
-      newsTags: [],
-      dailyBriefing: "규제 완화 소식에 강한 매수세가 유입되고 있습니다. 가설이 적중하고 있는 모습입니다.",
-      quizData: [],
-      chartHistory: {
-        '1D': generateChartData(230, 24, 'up'),
-        '1W': generateChartData(215, 20, 'up'),
-        '1M': generateChartData(190, 30, 'up'),
-        '3M': generateChartData(180, 45, 'volatile'),
-        '1Y': generateChartData(250, 60, 'down'),
-        '5Y': generateChartData(50, 60, 'up'),
-      },
-      chartNarratives: {
-        '1D': '규제 완화 속보로 급등세가 연출되고 있습니다.',
-        '1W': '인도량 호조 기대감이 선반영되며 상승세를 탔습니다.',
-        '1M': '저가 매수세 유입으로 바닥을 다지고 반등했습니다.',
-        '3M': '전기차 수요 둔화 우려와 신모델 기대감이 공존하고 있습니다.',
-        '1Y': '영업이익률 하락 우려로 인해 박스권에 갇혀 있었습니다.',
-        '5Y': '전기차 대중화를 이끌며 자동차 산업의 패러다임을 바꿨습니다.'
-      }
-    }
-  ],
+  myThesis: [],
   discovery: {
     recentSearches: [
-      { id: 101, ticker: "GOOGL", name: "Google", date: "Just now" }
+      { id: 101, ticker: "GOOGL", name: "구글", date: "Just now" }
     ],
     searchResults: [],
     trendingLogics: [
@@ -242,7 +224,7 @@ export const getInitialData = (): AppData => ({
         keyword: "전력", 
         relatedStocksDetails: [
            { ticker: "HD현대", name: "HD현대일렉트릭", rate: 4.5 },
-           { ticker: "LS", name: "LS ELECTRIC", rate: 3.2 }
+           { ticker: "LS", name: "LS일렉트릭", rate: 3.2 }
         ],
         title: "전력 슈퍼사이클",
         subtitle: "AI 데이터센터가 불러온 전력 설비 품귀 현상",
@@ -254,8 +236,8 @@ export const getInitialData = (): AppData => ({
         rank: 3, 
         keyword: "비만치료제", 
         relatedStocksDetails: [
-          { ticker: "LLY", name: "Eli Lilly", rate: 0.8 },
-          { ticker: "NVO", name: "Novo Nordisk", rate: 1.1 }
+          { ticker: "LLY", name: "일라이 릴리", rate: 0.8 },
+          { ticker: "NVO", name: "노보 노디스크", rate: 1.1 }
         ],
         title: "비만 치료제 혁명",
         subtitle: "없어서 못 파는 GLP-1, 적응증 확대로 시장 확장",

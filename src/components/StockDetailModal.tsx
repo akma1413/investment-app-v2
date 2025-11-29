@@ -18,7 +18,6 @@ interface StockDetailModalProps {
   onAddLogic?: () => void;
 }
 
-// Helper to get X-axis labels (Moved from internal to component file level, but could be util)
 const getXAxisLabels = (frame: TimeFrame) => {
     switch (frame) {
         case '1D': return ['09:00', '12:00', '15:30'];
@@ -36,7 +35,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
   const [activeTimeFrame, setActiveTimeFrame] = useState<TimeFrame>('1M');
   const [isProfileExpanded, setIsProfileExpanded] = useState(false);
   
-  // State for Archived Events (Action Log)
   const [archivedIndices, setArchivedIndices] = useState<number[]>([]);
   const [eventDecisions, setEventDecisions] = useState<Record<number, string>>({});
 
@@ -58,7 +56,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
       setArchivedIndices(prev => [...prev, originalIndex]);
   };
 
-  // Chart Logic (Using Utils)
   const chartPoints = stock.chartHistory[activeTimeFrame] || [];
   const chartNarrative = stock.chartNarratives[activeTimeFrame] || TEXT.STOCK_DETAIL.CHART_LOADING;
   const isPositive = chartPoints.length > 0 ? (chartPoints[chartPoints.length - 1] - chartPoints[0]) >= 0 : stock.changeRate >= 0;
@@ -80,7 +77,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
       
       <div className="w-full max-w-[430px] h-[92vh] bg-[#121212] rounded-t-[32px] pointer-events-auto overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300 relative border-t border-white/10 mx-auto">
         
-        {/* --- HEADER --- */}
         <header className="flex justify-between items-center px-6 py-5 border-b border-white/5 bg-[#121212]/95 backdrop-blur-md sticky top-0 z-10">
           <div>
             <div className="text-xs font-bold text-zinc-500 mb-0.5">{stock.ticker}</div>
@@ -99,10 +95,8 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
           )}
         </header>
 
-        {/* --- BODY SCROLL --- */}
         <div className="flex-1 overflow-y-auto p-6 no-scrollbar pb-32">
           
-          {/* Learning Mode Banner */}
           {isLearningMode && (
              <div className="bg-app-accent/10 border border-app-accent/30 rounded-2xl p-4 flex items-start space-x-3 animate-pulse-slow mb-6">
                 <BookOpen size={20} className="text-app-accent mt-0.5 shrink-0" />
@@ -115,7 +109,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
              </div>
           )}
 
-          {/* 1. EVENT CAROUSEL */}
           {showActionCards && (
              <section className="mb-4">
                {activeEvents.map((evt) => (
@@ -128,7 +121,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
              </section>
           )}
 
-          {/* 2. CHART */}
           <section className="mb-10">
               <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-white flex items-center">
@@ -187,7 +179,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
               </div>
           </section>
 
-          {/* 3. LOGIC HEALTH */}
           {isInvested && (
           <section className="mb-10 animate-in slide-in-from-bottom duration-500 delay-100">
              <div className="flex items-center justify-between mb-4">
@@ -213,7 +204,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
           </section>
           )}
 
-          {/* 4. NEWS */}
           <section className="mb-10">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center">
                   <Calendar size={18} className="mr-2 text-zinc-500" />
@@ -232,7 +222,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
               </div>
           </section>
 
-          {/* 5. ACTION LOG */}
           {showActionLog && (
              <section className="mb-10 pt-6 border-t border-white/5 animate-in slide-in-from-bottom">
                  <h3 className="text-lg font-bold text-white mb-4 flex items-center">
@@ -251,7 +240,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
              </section>
           )}
 
-          {/* 6. COMPANY INFO */}
           <section className="pt-6 border-t border-white/5">
               <h3 className="text-lg font-bold text-white mb-3">{TEXT.STOCK_DETAIL.COMPANY_INFO_TITLE}</h3>
               <p className="text-zinc-400 leading-relaxed mb-4">
@@ -275,7 +263,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
 
         </div>
 
-        {/* --- LEARNING MODE FAB --- */}
         {isLearningMode && onReturnToQuiz && (
            <div className="absolute bottom-6 left-0 right-0 px-6 z-20">
               <button 
@@ -288,7 +275,6 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
            </div>
         )}
 
-        {/* --- UNINVESTED VIEW CTA --- */}
         {!isInvested && !isLearningMode && (
            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#121212] via-[#121212] to-transparent z-20 pt-12">
                <button 

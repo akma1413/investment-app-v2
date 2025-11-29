@@ -11,6 +11,14 @@ export const TEXT = {
     BTN_CLOSE: "닫기",
     LOADING: "로딩 중...",
   },
+  ACTIONS: {
+    BUY: "더 담기 (구매)",
+    SELL: "덜어내기 (판매)",
+    HOLD: "그대로 두기 (보유)",
+    WATCH: "지켜보기",
+    REVISE: "생각 고쳐먹기 (전략 수정)",
+    EXECUTE: "계획대로 실행",
+  },
   TAB: {
     INSIGHT: "투데이",
     MY_THESIS: "아이디어",
@@ -67,5 +75,7 @@ export const TEXT = {
   },
   ONBOARDING: {
     SPLASH_TAGLINE: "감이 아닌, 논리로.",
+    PERMISSION_TITLE: "단순한 시세 변동이 아니라\n내 가설에 대한 시사점을 알려드릴게요.",
+    PERMISSION_DESC: (name: string) => `"${name}님의 판단을 기다립니다."`,
   },
 };

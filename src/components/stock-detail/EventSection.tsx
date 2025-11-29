@@ -139,7 +139,7 @@ export const EventCarouselCard: React.FC<EventCarouselProps> = ({ event, onCompl
                         <div className="flex items-center justify-center space-x-2 text-app-accent font-bold">
                             <CheckCircle2 size={20} />
                             <span>
-                                {selectedAction === 'buy' ? '비중 확대' : selectedAction === 'sell' ? '비중 축소' : selectedAction === 'hold' ? '관망 (Hold)' : '전략 수정'} 선택됨
+                                {selectedAction === 'buy' ? TEXT.ACTIONS.BUY : selectedAction === 'sell' ? TEXT.ACTIONS.SELL : selectedAction === 'hold' ? TEXT.ACTIONS.HOLD : TEXT.ACTIONS.REVISE} 선택됨
                             </span>
                         </div>
                       </div>
@@ -216,10 +216,10 @@ export const ActionLogItem: React.FC<{ event: Event; decision: string }> = ({ ev
 
     const getDecisionBadge = (action: string) => {
         switch(action) {
-            case 'buy': return { text: '비중 확대', color: 'text-app-positive bg-app-positive/10 border-app-positive/20' };
-            case 'sell': return { text: '비중 축소', color: 'text-app-negative bg-app-negative/10 border-app-negative/20' };
-            case 'hold': return { text: '관망 (Hold)', color: 'text-zinc-400 bg-zinc-700/30 border-zinc-700' };
-            case 'revise': return { text: '전략 수정', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' };
+            case 'buy': return { text: TEXT.ACTIONS.BUY, color: 'text-app-positive bg-app-positive/10 border-app-positive/20' };
+            case 'sell': return { text: TEXT.ACTIONS.SELL, color: 'text-app-negative bg-app-negative/10 border-app-negative/20' };
+            case 'hold': return { text: TEXT.ACTIONS.HOLD, color: 'text-zinc-400 bg-zinc-700/30 border-zinc-700' };
+            case 'revise': return { text: TEXT.ACTIONS.REVISE, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' };
             default: return { text: '완료됨', color: 'text-zinc-400 bg-zinc-800' };
         }
     };

@@ -1,5 +1,4 @@
 
-
 export interface User {
   name: string;
   profileMsg: string;
@@ -7,7 +6,6 @@ export interface User {
   totalAssetValue: number;
   totalProfitValue: number;
   totalProfitRate: number;
-  // [New Field] Portfolio Details
   holdings: {
     domestic: Holding[];
     overseas: Holding[];
@@ -20,12 +18,11 @@ export interface Holding {
   name: string;
   quantity: number;
   currency: 'KRW' | 'USD';
-  valuation: number;   // Current Value in KRW
-  profitValue: number; // Profit/Loss amount in KRW
-  profitRate: number;  // Profit/Loss rate (%)
+  valuation: number;
+  profitValue: number;
+  profitRate: number;
 }
 
-// --- MARKET DATA ---
 export interface MarketIndex {
   name: string;
   value: string;
@@ -46,23 +43,22 @@ export interface SummaryHighlight {
   isBold: boolean;
 }
 
-// --- LOGIC & THESIS ---
 export interface LogicHistoryItem {
   date: string;
-  type: 'Positive' | 'Negative' | 'Neutral' | 'Success' | 'Failure'; // Extended for Decision Logs
-  category?: 'News' | 'Decision'; // To distinguish type of log
-  text: string; // e.g., "Earnings beat expectations supporting this"
-  badgeText?: string; // e.g. "+5% Saved"
+  type: 'Positive' | 'Negative' | 'Neutral' | 'Success' | 'Failure'; 
+  category?: 'News' | 'Decision';
+  text: string;
+  badgeText?: string;
 }
 
 export interface LogicBlock {
   id: string | number;
   icon?: string;
-  title: string; // Casual title: "AI makes Cloud money"
-  desc: string; // Detail
+  title: string;
+  desc: string;
   isActive?: boolean;
-  history?: LogicHistoryItem[]; // Added for Drill-down
-  healthScore?: number; // 0-100 score for validity
+  history?: LogicHistoryItem[];
+  healthScore?: number;
 }
 
 export interface VolatilityAnalysis {
@@ -73,7 +69,6 @@ export interface VolatilityAnalysis {
   timestamp: string;
 }
 
-// --- EVENT DRIVEN SYSTEM ---
 export type EventPhase = 'Pre-Event' | 'Post-Event' | 'None';
 
 export interface ActionOption {
@@ -86,13 +81,12 @@ export interface EventActionScenario {
   phase: EventPhase;
   title: string;
   description: string;
-  marketReaction?: string; // Only for Post-Event
-  myHypothesisCheck?: string; // Only for Post-Event
+  marketReaction?: string;
+  myHypothesisCheck?: string;
   options: ActionOption[];
-  // New fields for Step 2 Context
   analysisContext?: {
     signal: 'Warning' | 'Opportunity' | 'Neutral';
-    message: string; // "Wait! Volume is spiking abnormally."
+    message: string;
     highlightColor: string;
   };
 }
@@ -103,7 +97,7 @@ export interface Event {
   type: string;
   impact: 'High' | 'Medium' | 'Low';
   status: string;
-  actionScenario?: EventActionScenario; // Added for Event-Driven Interaction
+  actionScenario?: EventActionScenario;
 }
 
 export interface VerificationResult {
@@ -113,45 +107,41 @@ export interface VerificationResult {
   date: string;
 }
 
-// --- NEWS SYSTEM ---
 export interface NewsItem {
   type: 'Positive' | 'Negative' | 'Neutral';
   text: string;
   date: string;
-  analystComment?: string; // Added for enhanced context
-  relatedLogicId?: string | number; // Added to link with logic blocks
+  analystComment?: string;
+  relatedLogicId?: string | number;
 }
 
-// --- QUIZ & LEARNING SYSTEM ---
 export type QuizCategory = 'LongTerm' | 'ShortTerm';
 
 export interface QuizOption {
   text: string;
   type: 'bull' | 'bear' | 'idk';
-  relatedLogicId?: string | number; // ID of the logic block this option supports
+  relatedLogicId?: string | number;
 }
 
 export interface QuizQuestion {
   id: number;
   category: QuizCategory;
   question: string;
-  backgroundContext?: string; // Explains the "Why" before the question
+  backgroundContext?: string;
   options: QuizOption[];
   relatedInfo?: {
     title: string;
-    content: string[]; // Supports *bold* parsing
+    content: string[];
   };
 }
 
-// --- COMPANY INFO ---
 export interface CompanyProfile {
-  summary: string; // 3-line summary
-  description: string; // Easy explanation for beginners
+  summary: string;
+  description: string;
 }
 
 export type TimeFrame = '1D' | '1W' | '1M' | '3M' | '1Y' | '5Y';
 
-// --- MAIN THESIS STRUCTURE ---
 export interface Thesis {
   id: number;
   ticker: string;
@@ -161,14 +151,14 @@ export interface Thesis {
   changeRate: number;
   status: 'Invested' | 'Watching';
   
-  bigThesis: string; // Main one-liner thesis
-  companyProfile: CompanyProfile; // Added
+  bigThesis: string;
+  companyProfile: CompanyProfile;
   
   logicBlocks: LogicBlock[];
-  quizData: QuizQuestion[]; // Added for Learning Loop
+  quizData: QuizQuestion[];
   
   events: Event[];
-  newsTags: NewsItem[]; // Renamed/Upgraded from NewsTag
+  newsTags: NewsItem[];
   dailyBriefing: string;
   
   chartHistory: Record<TimeFrame, number[]>;
@@ -195,18 +185,17 @@ export interface TrendingLogic {
   theme: string;
 }
 
-// --- SEARCH & DISCOVERY ---
 export interface SearchResultSample {
   ticker: string;
   name: string;
   currentPrice: number;
   changeRate: number;
   
-  companyProfile: CompanyProfile; // Added to match Thesis
+  companyProfile: CompanyProfile;
   chartContext: string;
   
   availableLogicBlocks: LogicBlock[];
-  quizData: QuizQuestion[]; // Added for Builder
+  quizData: QuizQuestion[];
 }
 
 export interface RecentSearch {
@@ -237,7 +226,7 @@ export interface AppData {
   user: User;
   marketWeather: MarketWeather;
   summaryHighlights: SummaryHighlight[];
-  hotIssues: any[]; // Deprecated but kept for type safety if needed temporarily
+  hotIssues: any[];
   myThesis: Thesis[];
   discovery: Discovery;
   notifications: Notification[];

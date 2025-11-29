@@ -10,6 +10,7 @@ import StockDetailModal from './components/StockDetailModal';
 import HypothesisBuilder from './components/HypothesisBuilder';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import NotificationModal from './components/NotificationModal';
+import { TEXT } from './constants/text';
 
 type Tab = 'insight' | 'my-thesis' | 'discovery';
 
@@ -18,12 +19,10 @@ const AppContent: React.FC = () => {
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('insight');
   
-  // UI State for Overlays/Modals
   const [selectedStock, setSelectedStock] = useState<Thesis | null>(null);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  // Temporary State for Uninvested Stock View
   const [uninvestedStockPreview, setUninvestedStockPreview] = useState<Thesis | null>(null);
 
   const unreadCount = data.notifications.filter(n => !n.isRead).length;
@@ -36,23 +35,19 @@ const AppContent: React.FC = () => {
     if (stock) {
         selectDiscoveryStock(stock.ticker);
     }
-    // Close other modals if open
     setSelectedStock(null);
     setUninvestedStockPreview(null);
     setIsBuilderOpen(true);
   };
 
   const handleStockClickFromDiscovery = (stock: SearchResultSample) => {
-    // Check if user already owns this stock
     const existingThesis = data.myThesis.find(t => t.ticker === stock.ticker);
     
     if (existingThesis) {
-      // If owned, show the full detailed view
       setSelectedStock(existingThesis);
     } else {
-      // If not owned, create a temporary "Preview" Thesis object to display in modal
       const previewThesis: Thesis = {
-        id: -1, // Temporary ID
+        id: -1, 
         ticker: stock.ticker,
         name: stock.name,
         currentPrice: stock.currentPrice,
@@ -60,7 +55,7 @@ const AppContent: React.FC = () => {
         status: 'Watching',
         bigThesis: '',
         companyProfile: stock.companyProfile,
-        logicBlocks: [], // No active logic yet
+        logicBlocks: [],
         quizData: stock.quizData,
         events: [],
         newsTags: [],
@@ -68,19 +63,14 @@ const AppContent: React.FC = () => {
         chartHistory: {
           '1D': [stock.currentPrice],
           '1W': [], '1M': [], '3M': [], '1Y': [], '5Y': []
-        }, // Minimal chart data for preview
+        }, 
         chartNarratives: {
           '1D': stock.chartContext,
           '1W': '', '1M': '', '3M': '', '1Y': '', '5Y': ''
         }
       };
-      // We set specific chart context if available or generate dummy
-      // Since SearchResultSample lacks full chart history, StockDetailModal handles fallback/dummy generation if needed, 
-      // or we can pass a special flag. For now, passing the object allows the modal to render basic info.
       
-      // Update store state for builder context
       selectDiscoveryStock(stock.ticker);
-      
       setUninvestedStockPreview(previewThesis);
     }
   };
@@ -111,10 +101,8 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="h-screen w-full bg-[#000] flex justify-center items-center overflow-hidden font-sans selection:bg-app-accent selection:text-white">
-      {/* Mobile Constraint Container - Fixed Height */}
       <main className="w-full max-w-[430px] h-full bg-app-bg relative shadow-2xl shadow-black border-x border-white/5 flex flex-col overflow-hidden">
         
-        {/* Global Header Actions (Bell) */}
         {isOnboardingComplete && !selectedStock && !uninvestedStockPreview && !isBuilderOpen && !isNotificationOpen && (
            <button 
              onClick={() => setIsNotificationOpen(true)}
@@ -129,7 +117,6 @@ const AppContent: React.FC = () => {
            </button>
         )}
 
-        {/* Onboarding Overlay */}
         {!isOnboardingComplete && (
           <OnboardingFlow onComplete={(newStock) => {
             setIsOnboardingComplete(true);
@@ -140,12 +127,10 @@ const AppContent: React.FC = () => {
           }} />
         )}
 
-        {/* Dynamic Content Area */}
         <div className="flex-1 w-full relative overflow-hidden">
           {renderContent()}
         </div>
 
-        {/* Bottom Navigation */}
         <nav className="absolute bottom-0 left-0 right-0 z-40 bg-[#121212]/90 backdrop-blur-xl border-t border-white/5 pb-safe-bottom">
           <div className="flex justify-around items-center h-[88px] pb-4 px-2">
             <button
@@ -159,7 +144,7 @@ const AppContent: React.FC = () => {
                   strokeWidth={activeTab === 'insight' ? 2.5 : 2} 
                 />
               </div>
-              <span className={`text-[11px] font-bold tracking-tight ${activeTab === 'insight' ? 'text-white' : 'text-zinc-500'}`}>투데이</span>
+              <span className={`text-[11px] font-bold tracking-tight ${activeTab === 'insight' ? 'text-white' : 'text-zinc-500'}`}>{TEXT.TAB.INSIGHT}</span>
             </button>
 
             <button
@@ -173,7 +158,7 @@ const AppContent: React.FC = () => {
                   strokeWidth={activeTab === 'my-thesis' ? 2.5 : 2} 
                 />
               </div>
-              <span className={`text-[11px] font-bold tracking-tight ${activeTab === 'my-thesis' ? 'text-white' : 'text-zinc-500'}`}>아이디어</span>
+              <span className={`text-[11px] font-bold tracking-tight ${activeTab === 'my-thesis' ? 'text-white' : 'text-zinc-500'}`}>{TEXT.TAB.MY_THESIS}</span>
             </button>
 
             <button
@@ -187,12 +172,11 @@ const AppContent: React.FC = () => {
                   strokeWidth={activeTab === 'discovery' ? 2.5 : 2} 
                 />
               </div>
-              <span className={`text-[11px] font-bold tracking-tight ${activeTab === 'discovery' ? 'text-white' : 'text-zinc-500'}`}>발견</span>
+              <span className={`text-[11px] font-bold tracking-tight ${activeTab === 'discovery' ? 'text-white' : 'text-zinc-500'}`}>{TEXT.TAB.DISCOVERY}</span>
             </button>
           </div>
         </nav>
 
-        {/* Global Overlays */}
         {(selectedStock || uninvestedStockPreview) && (
           <StockDetailModal 
             stock={selectedStock || uninvestedStockPreview!} 

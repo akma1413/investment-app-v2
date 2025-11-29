@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Camera, Bell, Check, Layers, ArrowRight, X, ChevronRight, HelpCircle, Quote, Info, SkipForward, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { useStore, ALL_STOCKS } from '../../contexts/StoreContext';
 import { QuizCategory, SearchResultSample, Thesis } from '../../types';
+import { TEXT } from '../../constants/text';
 
 interface OnboardingFlowProps {
   onComplete: (stock?: Thesis) => void;
@@ -9,11 +11,11 @@ interface OnboardingFlowProps {
 
 type Step = 
   | 'splash' 
-  | 'intro' // Carousel
+  | 'intro'
   | 'name' 
   | 'ocr' 
   | 'stock-select'
-  | 'quiz' // New: Multi-step quiz
+  | 'quiz'
   | 'permission';
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
@@ -21,23 +23,18 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [name, setName] = useState("");
   const { data, updateUserName, addToMyThesis } = useStore();
   
-  // Carousel State
   const [slideIndex, setSlideIndex] = useState(0);
 
-  // OCR State
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
 
-  // Stock Selection State (Real Data)
   const [scannedStocks, setScannedStocks] = useState<SearchResultSample[]>([]);
   const [selectedStock, setSelectedStock] = useState<SearchResultSample | null>(null);
 
-  // Quiz State
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [selectedLogics, setSelectedLogics] = useState<number[]>([]);
   const [isInfoExpanded, setIsInfoExpanded] = useState(false);
 
-  // Splash Timer
   useEffect(() => {
     if (step === 'splash') {
       const timer = setTimeout(() => setStep('intro'), 2500);
@@ -45,7 +42,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   }, [step]);
 
-  // Carousel Auto-play logic
   useEffect(() => {
     if (step === 'intro') {
       const timer = setInterval(() => {
@@ -55,18 +51,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   }, [step]);
 
-  // OCR Logic: Match user holdings with available database
   useEffect(() => {
     if (step === 'ocr' && scanComplete) {
-       // Combine domestic and overseas holdings
-       const allHoldings = [...data.user.holdings.domestic, ...data.user.holdings.overseas];
+       const overseasHoldings = data.user.holdings.overseas;
        
-       // Filter ALL_STOCKS to find matches
        const matches = ALL_STOCKS.filter(stock => 
-          allHoldings.some(h => h.ticker === stock.ticker)
+          overseasHoldings.some(h => h.ticker === stock.ticker)
        );
        
-       // If matches found, use them. Else use top 3 defaults.
        if (matches.length > 0) {
            setScannedStocks(matches);
        } else {
@@ -75,7 +67,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   }, [step, scanComplete, data.user.holdings]);
 
-  // Reset Info Expanded on question change
   useEffect(() => {
     setIsInfoExpanded(false);
   }, [currentQuizIndex]);
@@ -103,23 +94,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     setStep('quiz');
   };
 
-  // --- QUIZ HELPERS ---
   const quizData = selectedStock?.quizData || [];
   const currentQuestion = quizData[currentQuizIndex];
   const progress = ((currentQuizIndex + 1) / quizData.length) * 100;
   const currentCategory: QuizCategory = currentQuestion?.category || 'LongTerm';
 
-  // Fallback for Related Info
   const infoData = currentQuestion?.relatedInfo || {
-      title: "검색 독점 소송이란?",
-      content: [
-          "미 법무부가 구글의 검색 시장 독점이 불법이라고 제소한 사건입니다.",
-          "패소 시 최악의 경우, 기업 분할 명령이 내려질 수 있어 주가 불확실성이 큽니다."
-      ]
+      title: "관련 정보",
+      content: ["추가 정보가 없습니다."]
   };
 
   const handleQuizAnswer = (option: any) => {
-      // 1. Collect Logic
       if (option.relatedLogicId) {
           setSelectedLogics(prev => {
               const id = Number(option.relatedLogicId);
@@ -127,7 +112,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
           });
       }
 
-      // 2. Next Question or Finish
       if (currentQuizIndex < quizData.length - 1) {
           setCurrentQuizIndex(prev => prev + 1);
       } else {
@@ -136,19 +120,16 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   };
 
   const handleSkip = () => {
-      // Just showing results is basically finishing or moving to next if we had distinct phases
-      // For now, let's just finish the quiz flow
       setStep('permission');
   };
 
   const handleFinalComplete = () => {
       if (selectedStock) {
-          // Save to store
           const newThesis = addToMyThesis(
               selectedStock,
               selectedLogics,
-              'Invested', // Defaulting to invested since it came from holdings
-              '100만원 미만' // Default amount or collected in a new step if needed
+              'Invested',
+              '100만원 미만'
           );
           onComplete(newThesis);
       } else {
@@ -156,7 +137,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
       }
   };
 
-  // Helper to parse bold text from content string (e.g. "This is *bold* text")
   const renderParsedContent = (text: string) => {
     const parts = text.split(/(\*.*?\*)/g);
     return parts.map((part, i) => {
@@ -170,32 +150,26 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   return (
     <div className="absolute inset-0 z-[200] bg-[#121212] flex flex-col items-center justify-center text-white overflow-hidden font-sans">
       
-      {/* --- STEP 1: SPLASH --- */}
       {step === 'splash' && (
         <div className="w-full h-full flex flex-col items-center justify-center animate-in fade-in duration-1000 text-center px-6">
-          {/* Logo Wrapper to handle spacing and clipping safety */}
           <div className="relative py-2">
             <h1 className="text-7xl font-black tracking-tighter bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent leading-none pb-2">
-              Hypo
+              {TEXT.COMMON.APP_NAME}
             </h1>
           </div>
-          {/* Tagline */}
           <p className="text-xl text-zinc-400 mt-4 font-medium tracking-tight animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-300">
-            감이 아닌, 논리로.
+            {TEXT.ONBOARDING.SPLASH_TAGLINE}
           </p>
         </div>
       )}
 
-      {/* --- STEP 2: CAROUSEL --- */}
       {step === 'intro' && (
         <div className="w-full h-full relative flex flex-col">
           <div className="flex-1 relative overflow-hidden">
-            {/* Slides */}
             <div 
               className="absolute inset-0 flex transition-transform duration-500 ease-out" 
               style={{ transform: `translateX(-${slideIndex * 100}%)` }}
             >
-              {/* Slide 1 */}
               <div className="w-full h-full flex-shrink-0 flex flex-col justify-center px-8">
                 <h1 className="text-4xl font-black leading-tight mb-6">
                   떨어질 땐 불안해서 팔고,<br/>
@@ -206,7 +180,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 </div>
               </div>
               
-              {/* Slide 2 */}
               <div className="w-full h-full flex-shrink-0 flex flex-col justify-center px-8">
                  <h1 className="text-4xl font-black leading-tight mb-6">
                   남들이 살 때 따라 사고<br/>
@@ -217,7 +190,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 </div>
               </div>
               
-              {/* Slide 3 */}
                <div className="w-full h-full flex-shrink-0 flex flex-col justify-center px-8">
                  <h1 className="text-4xl font-black leading-tight mb-6">
                   당신의 직감을<br/>
@@ -230,7 +202,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               </div>
             </div>
             
-            {/* Indicators */}
             <div className="absolute bottom-32 left-0 right-0 flex justify-center space-x-2">
               {[0, 1, 2].map(idx => (
                 <div 
@@ -241,7 +212,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             </div>
           </div>
 
-          {/* Bottom Actions */}
           <div className="p-6 pb-12 bg-[#121212] z-10">
             <button 
               onClick={() => setStep('name')}
@@ -259,7 +229,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {/* --- STEP 3: NAME INPUT --- */}
       {step === 'name' && (
         <div className="w-full h-full px-8 pt-24 pb-8 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="flex-1">
@@ -284,12 +253,11 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
             disabled={name.length === 0}
             className="w-full h-14 bg-app-accent disabled:opacity-30 text-white font-bold text-lg rounded-2xl flex items-center justify-center transition-all"
           >
-            다음
+            {TEXT.COMMON.BTN_NEXT}
           </button>
         </div>
       )}
 
-      {/* --- STEP 4: ASSET IMPORT (OCR) --- */}
       {step === 'ocr' && (
         <div className="w-full h-full flex flex-col animate-in slide-in-from-right duration-300">
           <div className="flex-1 px-8 pt-24">
@@ -302,7 +270,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               <span className="text-white font-bold">맞춤형 가설</span>을 세워드릴게요.
             </p>
 
-            {/* Mockup Visual */}
             <div className="relative w-full aspect-[4/5] bg-zinc-800 rounded-3xl overflow-hidden border border-white/10 mb-8 group">
               {!isScanning && !scanComplete && (
                  <div className="absolute inset-0 flex flex-col items-center justify-center text-zinc-500">
@@ -315,7 +282,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                  </div>
               )}
               
-              {/* Scanning Animation */}
               {isScanning && (
                 <div className="absolute inset-0 bg-black/50 z-10 flex flex-col items-center justify-center">
                   <div className="w-full h-1 bg-app-accent absolute top-0 animate-[scan_2s_infinite_ease-in-out]" style={{ boxShadow: '0 0 20px #6366f1' }} />
@@ -323,7 +289,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 </div>
               )}
 
-              {/* Success State */}
               {scanComplete && (
                 <div className="absolute inset-0 bg-app-accent/20 z-10 flex flex-col items-center justify-center animate-in fade-in zoom-in duration-300">
                   <div className="w-16 h-16 bg-app-accent rounded-full flex items-center justify-center mb-4">
@@ -347,7 +312,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {/* --- STEP 5: STOCK SELECT --- */}
       {step === 'stock-select' && (
         <div className="w-full h-full flex flex-col px-6 pt-24 animate-in slide-in-from-right duration-300">
           <div className="flex-1">
@@ -373,7 +337,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                       </span>
                     </div>
                     <div className="text-zinc-500 group-hover:text-zinc-300 transition-colors">
-                      {stock.changeRate < 0 ? '손절 해야 할까? 물 타야 할까?' : '수익 실현 할까? 더 들고 갈까?'}
+                      {stock.changeRate < 0 ? '판매를 고민하고 계신가요?' : '수익 실현을 고민하시나요?'}
                     </div>
                   </button>
               ))}
@@ -382,24 +346,19 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {/* --- STEP 6: QUIZ LOOP (NEW LOGIC) --- */}
       {step === 'quiz' && (
         <div className="w-full h-full flex flex-col bg-app-bg animate-in slide-in-from-right duration-300">
-            {/* Improved Header Area */}
             <div className="px-6 pt-16 pb-6 bg-app-bg z-10">
               <div className="flex items-center justify-between mb-6">
-                {/* Larger Category Badge */}
                 <span className={`px-4 py-2 rounded-full text-sm font-bold border ${currentCategory === 'LongTerm' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
                    {currentCategory === 'LongTerm' ? '🔭 장기적 관점' : '⚡️ 단기 이슈'}
                 </span>
                 
-                {/* More Visible Skip Button */}
                 <button onClick={handleSkip} className="px-5 py-2.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-bold transition-colors">
                    결과 보기
                 </button>
               </div>
               
-              {/* Thicker Progress Bar */}
               <div className="flex items-center space-x-4">
                  <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
                     <div className="h-full bg-app-accent transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -410,10 +369,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               </div>
             </div>
 
-            {/* Scrollable Question Area */}
             <div className="flex-1 px-6 overflow-y-auto pb-10">
-               
-               {/* Context Card */}
                {currentQuestion.backgroundContext && (
                   <div className="mb-6 p-5 bg-[#1E1E1E] border border-white/10 rounded-2xl animate-in slide-in-from-bottom-2">
                      <div className="flex items-center space-x-2 mb-3 text-indigo-400">
@@ -426,12 +382,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   </div>
                )}
 
-               {/* Question Title */}
                <h2 className="text-2xl font-bold text-white mb-8 leading-snug whitespace-pre-line">
                   {currentQuestion.question}
                </h2>
 
-               {/* Options List */}
                <div className="space-y-3 mb-8">
                   {currentQuestion?.options.map((option, idx) => (
                      <button
@@ -449,7 +403,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   ))}
                </div>
 
-               {/* Related Info Toggle (Updated) */}
                <div className="animate-in fade-in slide-in-from-bottom-4">
                  <button 
                    onClick={() => setIsInfoExpanded(!isInfoExpanded)}
@@ -474,12 +427,10 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                    </div>
                  )}
                </div>
-
             </div>
         </div>
       )}
 
-      {/* --- STEP 7: PERMISSION & FINISH --- */}
       {step === 'permission' && (
         <div className="w-full h-full flex flex-col px-8 pt-24 pb-12 animate-in slide-in-from-right duration-300 text-center">
           <div className="flex-1 flex flex-col items-center justify-center">
@@ -487,13 +438,11 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               <Bell size={40} className="text-app-accent" />
             </div>
             
-            <h2 className="text-3xl font-bold leading-tight mb-4">
-              단순한 시세 변동이 아니라<br/>
-              <span className="text-app-accent">내 가설에 대한 시사점</span>을<br/>
-              알려드릴게요.
+            <h2 className="text-3xl font-bold leading-tight mb-4 whitespace-pre-line">
+              {TEXT.ONBOARDING.PERMISSION_TITLE}
             </h2>
             <p className="text-zinc-400 text-lg">
-              "{data.user.name}님의 판단을 기다립니다."
+              {TEXT.ONBOARDING.PERMISSION_DESC(data.user.name)}
             </p>
           </div>
 

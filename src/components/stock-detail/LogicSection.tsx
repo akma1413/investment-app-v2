@@ -6,7 +6,6 @@ import { LogicBlock } from '../../types';
 export const LogicHealthItem: React.FC<{ logic: LogicBlock }> = ({ logic }) => {
     const [isOpen, setIsOpen] = useState(false);
 
-    // Mock history if not present
     const history = logic.history || [
         { date: '2일 전', type: 'Positive', text: '관련 실적 20% 상회 발표' },
         { date: '1주 전', type: 'Neutral', text: '경쟁사 신제품 출시 소식' },
@@ -40,11 +39,9 @@ export const LogicHealthItem: React.FC<{ logic: LogicBlock }> = ({ logic }) => {
                 </div>
             </button>
 
-            {/* Drill-down History */}
             <div className={`grid transition-[grid-template-rows] duration-500 ease-out ${isOpen ? 'grid-rows-[1fr] mt-2' : 'grid-rows-[0fr]'}`}>
                 <div className="overflow-hidden">
                     <div className="bg-[#121212] rounded-2xl p-5 border border-white/10 ml-4 relative">
-                        {/* Timeline Line */}
                         <div className="absolute left-[29px] top-6 bottom-6 w-[2px] bg-zinc-800" />
                         
                         <h5 className="text-xs font-bold text-zinc-500 mb-4 pl-1 flex items-center">
@@ -55,14 +52,12 @@ export const LogicHealthItem: React.FC<{ logic: LogicBlock }> = ({ logic }) => {
                         <div className="space-y-6">
                             {history.map((item, idx) => (
                                 <div key={idx} className="relative flex items-start space-x-4">
-                                    {/* Timeline Dot logic */}
                                     <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 border-2 border-[#121212] 
                                         ${item.type === 'Positive' || item.type === 'Success' ? 'bg-app-positive' : 
                                           item.type === 'Negative' || item.type === 'Failure' ? 'bg-app-negative' : 'bg-zinc-500'}`} 
                                     />
                                     
                                     <div className="flex-1">
-                                        {/* Decision Badge */}
                                         {item.category === 'Decision' && (
                                             <div className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg mb-1.5 text-[11px] font-bold uppercase tracking-wide border
                                                 ${item.type === 'Success' 

@@ -4,7 +4,6 @@ import { AppData, StoreContextType, SearchResultSample, Thesis } from '../types'
 import { ALL_STOCKS, getInitialData } from '../data/stockData';
 import { generateChartData } from '../utils/chartUtils';
 
-// Export ALL_STOCKS so components can use it from the context module
 export { ALL_STOCKS };
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -67,7 +66,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // 1. Create Logic Blocks from selected IDs
     const selectedLogicBlocks = stock.availableLogicBlocks.filter(l => 
         selectedLogicIds.includes(Number(l.id))
-    ).map(l => ({ ...l, isActive: true })); // Mark as active
+    ).map(l => ({ ...l, isActive: true }));
 
     // 2. Generate Dummy Charts using Utility
     const trend = stock.changeRate > 0 ? 'up' : 'down';
@@ -82,7 +81,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // 3. Construct New Thesis Object
     const newThesis: Thesis = {
-        id: Date.now(), // Unique ID
+        id: Date.now(), 
         ticker: stock.ticker,
         name: stock.name,
         currentPrice: stock.currentPrice,
@@ -92,8 +91,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         companyProfile: stock.companyProfile,
         logicBlocks: selectedLogicBlocks,
         quizData: stock.quizData,
-        events: [], // Start with no events
-        newsTags: [], // Start with no news
+        events: [],
+        newsTags: [],
         dailyBriefing: "새로운 투자 가설이 등록되었습니다. 시장의 변화를 면밀히 관찰하세요.",
         chartHistory: chartHistory,
         chartNarratives: {
@@ -107,7 +106,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     // 4. Update State
     setData(prev => ({
         ...prev,
-        myThesis: [newThesis, ...prev.myThesis], // Add to top
+        myThesis: [newThesis, ...prev.myThesis],
         notifications: [
             {
                 id: Date.now(),
