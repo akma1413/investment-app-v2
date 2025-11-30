@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Camera, Bell, Check, Layers } from 'lucide-react';
 import { useStore, ALL_STOCKS } from '../../contexts/StoreContext';

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useStore } from '../contexts/StoreContext';
 import { Cloud, Cpu, Server, Car, Scale, Lightbulb, ChevronRight, Clock, AlertCircle } from 'lucide-react';
@@ -43,8 +42,8 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
         {myThesis.map((stock) => {
            const isInvested = stock.status === 'Invested';
            // Check for urgency using status and optional impact if present
-           const isUrgent = stock.events.some(e => e.status === 'Upcoming' && e.impact === 'High');
-           const urgentEvent = stock.events.find(e => e.status === 'Upcoming' && e.impact === 'High');
+           const isUrgent = stock.events.some(e => e.status === 'Upcoming' || e.impact === 'High');
+           const urgentEvent = stock.events.find(e => e.status === 'Upcoming' || e.impact === 'High');
            
            const holding = isInvested ? getHoldingData(stock.ticker) : null;
 
@@ -117,7 +116,7 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
                      <div className="flex items-center space-x-2">
                         <Clock size={16} className="text-app-positive" />
                         <span className="text-sm font-bold text-app-positive">
-                          {TEXT.MY_THESIS.LABEL_D_DAY(urgentEvent.date)} {urgentEvent.type} 발표
+                          {urgentEvent.date ? TEXT.MY_THESIS.LABEL_D_DAY(urgentEvent.date) : ''} {urgentEvent.type} 발표
                         </span>
                      </div>
                      <span className="text-sm font-bold text-white flex items-center">
