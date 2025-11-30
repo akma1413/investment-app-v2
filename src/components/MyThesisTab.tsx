@@ -42,8 +42,9 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
       <div className="p-6 space-y-4">
         {myThesis.map((stock) => {
            const isInvested = stock.status === 'Invested';
-           const isUrgent = stock.events.some(e => e.impact === 'High' && (e.dDay === 'D-1' || e.dDay === 'Today'));
-           const urgentEvent = stock.events.find(e => e.impact === 'High');
+           // Check for urgency using status and optional impact if present
+           const isUrgent = stock.events.some(e => e.status === 'Upcoming' && e.impact === 'High');
+           const urgentEvent = stock.events.find(e => e.status === 'Upcoming' && e.impact === 'High');
            
            const holding = isInvested ? getHoldingData(stock.ticker) : null;
 
@@ -116,7 +117,7 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
                      <div className="flex items-center space-x-2">
                         <Clock size={16} className="text-app-positive" />
                         <span className="text-sm font-bold text-app-positive">
-                          {TEXT.MY_THESIS.LABEL_D_DAY(urgentEvent.dDay)} {urgentEvent.type} 발표
+                          {TEXT.MY_THESIS.LABEL_D_DAY(urgentEvent.date)} {urgentEvent.type} 발표
                         </span>
                      </div>
                      <span className="text-sm font-bold text-white flex items-center">
@@ -127,7 +128,7 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
                   <div className="flex items-center space-x-2">
                      <Clock size={16} className={stock.events[0].impact === 'High' ? 'text-app-positive' : 'text-zinc-500'} />
                      <span className={`text-sm font-bold ${stock.events[0].impact === 'High' ? 'text-app-positive' : 'text-zinc-500'}`}>
-                       {stock.events[0].dDay} {stock.events[0].type}
+                       {stock.events[0].date} {stock.events[0].type}
                      </span>
                   </div>
                 ) : (

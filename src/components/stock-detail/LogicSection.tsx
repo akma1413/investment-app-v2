@@ -6,11 +6,8 @@ import { LogicBlock } from '../../types';
 export const LogicHealthItem: React.FC<{ logic: LogicBlock }> = ({ logic }) => {
     const [isOpen, setIsOpen] = useState(false);
 
-    const history = logic.history || [
-        { date: '2일 전', type: 'Positive', text: '관련 실적 20% 상회 발표' },
-        { date: '1주 전', type: 'Neutral', text: '경쟁사 신제품 출시 소식' },
-        { date: '2주 전', type: 'Positive', text: 'CEO가 컨퍼런스에서 해당 내용 강조' },
-    ];
+    // Provide default empty array if history is undefined
+    const history = logic.history || [];
 
     return (
         <div className="mb-4">
@@ -49,31 +46,35 @@ export const LogicHealthItem: React.FC<{ logic: LogicBlock }> = ({ logic }) => {
                             가설 히스토리
                         </h5>
                         
-                        <div className="space-y-6">
-                            {history.map((item, idx) => (
-                                <div key={idx} className="relative flex items-start space-x-4">
-                                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 border-2 border-[#121212] 
-                                        ${item.type === 'Positive' || item.type === 'Success' ? 'bg-app-positive' : 
-                                          item.type === 'Negative' || item.type === 'Failure' ? 'bg-app-negative' : 'bg-zinc-500'}`} 
-                                    />
-                                    
-                                    <div className="flex-1">
-                                        {item.category === 'Decision' && (
-                                            <div className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg mb-1.5 text-[11px] font-bold uppercase tracking-wide border
-                                                ${item.type === 'Success' 
-                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                                                    : 'bg-zinc-700/30 text-zinc-400 border-zinc-700'}`}>
-                                                {item.type === 'Success' ? <Target size={12} /> : <AlertTriangle size={12} />}
-                                                <span>{item.badgeText || '의사결정'}</span>
-                                            </div>
-                                        )}
+                        {history.length > 0 ? (
+                            <div className="space-y-6">
+                                {history.map((item, idx) => (
+                                    <div key={idx} className="relative flex items-start space-x-4">
+                                        <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 z-10 border-2 border-[#121212] 
+                                            ${item.type === 'Positive' || item.type === 'Success' ? 'bg-app-positive' : 
+                                            item.type === 'Negative' || item.type === 'Failure' ? 'bg-app-negative' : 'bg-zinc-500'}`} 
+                                        />
+                                        
+                                        <div className="flex-1">
+                                            {item.category === 'Decision' && (
+                                                <div className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg mb-1.5 text-[11px] font-bold uppercase tracking-wide border
+                                                    ${item.type === 'Success' 
+                                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                                        : 'bg-zinc-700/30 text-zinc-400 border-zinc-700'}`}>
+                                                    {item.type === 'Success' ? <Target size={12} /> : <AlertTriangle size={12} />}
+                                                    <span>{item.badgeText || '의사결정'}</span>
+                                                </div>
+                                            )}
 
-                                        <div className="text-sm font-bold text-white leading-tight mb-1">{item.text}</div>
-                                        <div className="text-xs text-zinc-600">{item.date}</div>
+                                            <div className="text-sm font-bold text-white leading-tight mb-1">{item.text}</div>
+                                            <div className="text-xs text-zinc-600">{item.date}</div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-xs text-zinc-500 py-2">기록된 히스토리가 없습니다.</div>
+                        )}
                     </div>
                 </div>
             </div>

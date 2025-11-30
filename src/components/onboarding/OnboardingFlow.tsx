@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Camera, Bell, Check, Layers, ArrowRight, X, ChevronRight, HelpCircle, Quote, Info, SkipForward, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { Camera, Bell, Check, Layers } from 'lucide-react';
 import { useStore, ALL_STOCKS } from '../../contexts/StoreContext';
-import { QuizCategory, SearchResultSample, Thesis } from '../../types';
+import { SearchResultSample, Thesis } from '../../types';
 import { TEXT } from '../../constants/text';
+import NarrativeIntro from '../narrative/NarrativeIntro';
 
 interface OnboardingFlowProps {
   onComplete: (stock?: Thesis) => void;
@@ -15,7 +16,7 @@ type Step =
   | 'name' 
   | 'ocr' 
   | 'stock-select'
-  | 'quiz'
+  | 'narrative' // New Step
   | 'permission';
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
@@ -30,11 +31,11 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const [scannedStocks, setScannedStocks] = useState<SearchResultSample[]>([]);
   const [selectedStock, setSelectedStock] = useState<SearchResultSample | null>(null);
+  
+  // New state to hold the created thesis after Narrative step
+  const [finalThesis, setFinalThesis] = useState<Thesis | null>(null);
 
-  const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
-  const [selectedLogics, setSelectedLogics] = useState<number[]>([]);
-  const [isInfoExpanded, setIsInfoExpanded] = useState(false);
-
+  // --- TIMERS & EFFECTS ---
   useEffect(() => {
     if (step === 'splash') {
       const timer = setTimeout(() => setStep('intro'), 2500);
@@ -67,10 +68,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   }, [step, scanComplete, data.user.holdings]);
 
-  useEffect(() => {
-    setIsInfoExpanded(false);
-  }, [currentQuizIndex]);
-
+  // --- HANDLERS ---
   const handleNameSubmit = () => {
     if (name.trim().length > 0) {
       updateUserName(name);
@@ -89,67 +87,40 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const handleStockSelect = (stock: SearchResultSample) => {
     setSelectedStock(stock);
-    setCurrentQuizIndex(0);
-    setSelectedLogics([]);
-    setStep('quiz');
+    setStep('narrative'); // Changed from 'quiz' to 'narrative'
   };
 
-  const quizData = selectedStock?.quizData || [];
-  const currentQuestion = quizData[currentQuizIndex];
-  const progress = ((currentQuizIndex + 1) / quizData.length) * 100;
-  const currentCategory: QuizCategory = currentQuestion?.category || 'LongTerm';
+  // Handler for Narrative Completion
+  const handleNarrativeComplete = (decision: 'Buy' | 'Watch') => {
+    if (!selectedStock) return;
 
-  const infoData = currentQuestion?.relatedInfo || {
-      title: "관련 정보",
-      content: ["추가 정보가 없습니다."]
-  };
+    const status = decision === 'Buy' ? 'Invested' : 'Watching';
+    const amount = decision === 'Buy' ? '100만원 미만' : undefined;
 
-  const handleQuizAnswer = (option: any) => {
-      if (option.relatedLogicId) {
-          setSelectedLogics(prev => {
-              const id = Number(option.relatedLogicId);
-              return prev.includes(id) ? prev : [...prev, id];
-          });
-      }
+    // 1. Save to Store immediately
+    // Note: We pass empty array for logicIds as we are in narrative phase
+    const newThesis = addToMyThesis(selectedStock, [], status, amount);
+    
+    // 2. Store locally to pass to parent later
+    setFinalThesis(newThesis);
 
-      if (currentQuizIndex < quizData.length - 1) {
-          setCurrentQuizIndex(prev => prev + 1);
-      } else {
-          setStep('permission');
-      }
-  };
-
-  const handleSkip = () => {
-      setStep('permission');
+    // 3. Move to Permission
+    setStep('permission');
   };
 
   const handleFinalComplete = () => {
-      if (selectedStock) {
-          const newThesis = addToMyThesis(
-              selectedStock,
-              selectedLogics,
-              'Invested',
-              '100만원 미만'
-          );
-          onComplete(newThesis);
-      } else {
+    // Pass the finalThesis we created in the previous step
+    if (finalThesis) {
+        onComplete(finalThesis);
+    } else {
         onComplete();
-      }
-  };
-
-  const renderParsedContent = (text: string) => {
-    const parts = text.split(/(\*.*?\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('*') && part.endsWith('*')) {
-        return <span key={i} className="text-white font-bold">{part.slice(1, -1)}</span>;
-      }
-      return <span key={i}>{part}</span>;
-    });
+    }
   };
 
   return (
     <div className="absolute inset-0 z-[200] bg-[#121212] flex flex-col items-center justify-center text-white overflow-hidden font-sans">
       
+      {/* STEP 1: SPLASH */}
       {step === 'splash' && (
         <div className="w-full h-full flex flex-col items-center justify-center animate-in fade-in duration-1000 text-center px-6">
           <div className="relative py-2">
@@ -163,6 +134,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
+      {/* STEP 2: INTRO CAROUSEL */}
       {step === 'intro' && (
         <div className="w-full h-full relative flex flex-col">
           <div className="flex-1 relative overflow-hidden">
@@ -229,6 +201,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
+      {/* STEP 3: NAME */}
       {step === 'name' && (
         <div className="w-full h-full px-8 pt-24 pb-8 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="flex-1">
@@ -258,6 +231,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
+      {/* STEP 4: OCR */}
       {step === 'ocr' && (
         <div className="w-full h-full flex flex-col animate-in slide-in-from-right duration-300">
           <div className="flex-1 px-8 pt-24">
@@ -312,6 +286,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
+      {/* STEP 5: STOCK SELECT */}
       {step === 'stock-select' && (
         <div className="w-full h-full flex flex-col px-6 pt-24 animate-in slide-in-from-right duration-300">
           <div className="flex-1">
@@ -346,91 +321,18 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {step === 'quiz' && (
-        <div className="w-full h-full flex flex-col bg-app-bg animate-in slide-in-from-right duration-300">
-            <div className="px-6 pt-16 pb-6 bg-app-bg z-10">
-              <div className="flex items-center justify-between mb-6">
-                <span className={`px-4 py-2 rounded-full text-sm font-bold border ${currentCategory === 'LongTerm' ? 'bg-purple-500/20 text-purple-400 border-purple-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
-                   {currentCategory === 'LongTerm' ? '🔭 장기적 관점' : '⚡️ 단기 이슈'}
-                </span>
-                
-                <button onClick={handleSkip} className="px-5 py-2.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-bold transition-colors">
-                   결과 보기
-                </button>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                 <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-app-accent transition-all duration-500" style={{ width: `${progress}%` }} />
-                 </div>
-                 <span className="text-xl font-black text-zinc-500">
-                    {currentQuizIndex + 1}<span className="text-sm font-medium text-zinc-700">/{quizData.length}</span>
-                 </span>
-              </div>
-            </div>
-
-            <div className="flex-1 px-6 overflow-y-auto pb-10">
-               {currentQuestion.backgroundContext && (
-                  <div className="mb-6 p-5 bg-[#1E1E1E] border border-white/10 rounded-2xl animate-in slide-in-from-bottom-2">
-                     <div className="flex items-center space-x-2 mb-3 text-indigo-400">
-                        <Info size={18} />
-                        <span className="text-xs font-bold uppercase tracking-wider">배경 지식</span>
-                     </div>
-                     <p className="text-zinc-300 leading-relaxed text-base">
-                        {currentQuestion.backgroundContext}
-                     </p>
-                  </div>
-               )}
-
-               <h2 className="text-2xl font-bold text-white mb-8 leading-snug whitespace-pre-line">
-                  {currentQuestion.question}
-               </h2>
-
-               <div className="space-y-3 mb-8">
-                  {currentQuestion?.options.map((option, idx) => (
-                     <button
-                       key={idx}
-                       onClick={() => handleQuizAnswer(option)}
-                       className={`w-full p-5 rounded-2xl text-left border transition-all active:scale-[0.98] flex items-center justify-between group
-                         ${option.type === 'idk' 
-                           ? 'bg-transparent border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 mt-2' 
-                           : 'bg-[#1E1E1E] border-white/5 text-white hover:border-app-accent/50 hover:bg-white/5'
-                         }`}
-                     >
-                       <span className="text-lg font-medium">{option.text}</span>
-                       <ArrowRight size={20} className={`group-hover:text-white transition-colors ${option.type === 'idk' ? 'text-zinc-600' : 'text-zinc-500'}`} />
-                     </button>
-                  ))}
-               </div>
-
-               <div className="animate-in fade-in slide-in-from-bottom-4">
-                 <button 
-                   onClick={() => setIsInfoExpanded(!isInfoExpanded)}
-                   className="flex items-center space-x-2 text-zinc-500 hover:text-white font-bold text-sm transition-colors mb-2"
-                 >
-                   <Info size={16} />
-                   <span>관련 정보</span>
-                   {isInfoExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                 </button>
-                 
-                 {isInfoExpanded && (
-                   <div className="bg-white/5 p-5 rounded-xl border border-white/5 animate-in zoom-in-95 duration-200">
-                      <h4 className="text-base font-bold text-app-accent mb-3">{infoData.title}</h4>
-                      <ul className="space-y-2">
-                        {infoData.content.map((point, i) => (
-                          <li key={i} className="text-zinc-300 text-sm leading-relaxed flex items-start">
-                            <span className="mr-2 mt-1.5 w-1 h-1 bg-zinc-500 rounded-full shrink-0" />
-                            <span>{renderParsedContent(point)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                   </div>
-                 )}
-               </div>
-            </div>
-        </div>
+      {/* STEP 6: NARRATIVE (New) */}
+      {step === 'narrative' && selectedStock && (
+         <div className="fixed inset-0 z-[210] bg-[#121212] animate-in slide-in-from-right duration-300">
+             <NarrativeIntro 
+               stock={selectedStock}
+               onComplete={handleNarrativeComplete}
+               onClose={() => setStep('stock-select')}
+             />
+         </div>
       )}
 
+      {/* STEP 7: PERMISSION */}
       {step === 'permission' && (
         <div className="w-full h-full flex flex-col px-8 pt-24 pb-12 animate-in slide-in-from-right duration-300 text-center">
           <div className="flex-1 flex flex-col items-center justify-center">

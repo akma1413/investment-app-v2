@@ -1,8 +1,9 @@
 
+
 import React, { useState } from 'react';
 import { CalendarClock, Lightbulb, Compass, Bell } from 'lucide-react';
 import { StoreProvider, useStore } from './contexts/StoreContext';
-import { Thesis, SearchResultSample } from './types';
+import { Thesis, SearchResultSample, Notification } from './types';
 import InsightTab from './components/InsightTab';
 import MyThesisTab from './components/MyThesisTab';
 import DiscoveryTab from './components/DiscoveryTab';
@@ -10,20 +11,21 @@ import StockDetailModal from './components/StockDetailModal';
 import HypothesisBuilder from './components/HypothesisBuilder';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import NotificationModal from './components/NotificationModal';
+import NarrativeIntro from './components/narrative/NarrativeIntro'; // Import NarrativeIntro
 import { TEXT } from './constants/text';
 
 type Tab = 'insight' | 'my-thesis' | 'discovery';
 
 const AppContent: React.FC = () => {
-  const { data, selectDiscoveryStock } = useStore();
+  const { data, selectDiscoveryStock, addToMyThesis } = useStore();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('insight');
   
-  const [selectedStock, setSelectedStock] = useState<Thesis | null>(null);
-  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  // UI State for Overlays/Modals
+  const [selectedStock, setSelectedStock] = useState<Thesis | null>(null); // Logic HQ (Detail Modal)
+  const [narrativeTarget, setNarrativeTarget] = useState<SearchResultSample | null>(null); // Global Narrative Modal
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false); // Watchpoint/Hypothesis Builder
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-
-  const [uninvestedStockPreview, setUninvestedStockPreview] = useState<Thesis | null>(null);
 
   const unreadCount = data.notifications.filter(n => !n.isRead).length;
 
@@ -31,71 +33,74 @@ const AppContent: React.FC = () => {
     setActiveTab(tab);
   };
 
+  // --- 1. Onboarding Completion (Direct Landing) ---
+  const handleOnboardingComplete = (newThesis?: Thesis) => {
+    setIsOnboardingComplete(true);
+    setActiveTab('my-thesis');
+    
+    // If a thesis was created during onboarding, land directly on its Logic HQ
+    if (newThesis) {
+      setSelectedStock(newThesis);
+    }
+  };
+
+  // --- 2. Discovery Navigation Logic ---
+  const handleStockClickFromDiscovery = (stock: SearchResultSample) => {
+    // Check if user already has a thesis for this stock
+    const existingThesis = data.myThesis.find(t => t.ticker === stock.ticker);
+    
+    if (existingThesis) {
+      // Case A: Invested/Watching -> Go to Logic HQ
+      setSelectedStock(existingThesis);
+      // Optional: switch tab to show context, but modal covers it anyway
+      // setActiveTab('my-thesis'); 
+    } else {
+      // Case B: Uninvested -> Start Narrative Flow
+      setNarrativeTarget(stock);
+    }
+  };
+
+  // --- 3. Global Narrative Completion ---
+  const handleGlobalNarrativeComplete = (decision: 'Buy' | 'Watch') => {
+    if (!narrativeTarget) return;
+
+    const status = decision === 'Buy' ? 'Invested' : 'Watching';
+    const amount = decision === 'Buy' ? '100만원 미만' : undefined;
+
+    // 1. Create & Save Thesis
+    const newThesis = addToMyThesis(narrativeTarget, [], status, amount);
+
+    // 2. Close Narrative Modal
+    setNarrativeTarget(null);
+
+    // 3. Land on Logic HQ
+    setActiveTab('my-thesis');
+    setSelectedStock(newThesis);
+  };
+
+  // Logic Builder (Add/Edit Watchpoints for existing thesis)
   const handleOpenBuilder = (stock?: Thesis | SearchResultSample) => {
     if (stock) {
         selectDiscoveryStock(stock.ticker);
     }
     setSelectedStock(null);
-    setUninvestedStockPreview(null);
     setIsBuilderOpen(true);
   };
 
-  const handleStockClickFromDiscovery = (stock: SearchResultSample) => {
-    const existingThesis = data.myThesis.find(t => t.ticker === stock.ticker);
-    
-    if (existingThesis) {
-      setSelectedStock(existingThesis);
-    } else {
-      const previewThesis: Thesis = {
-        id: -1, 
-        ticker: stock.ticker,
-        name: stock.name,
-        currentPrice: stock.currentPrice,
-        changeRate: stock.changeRate,
-        status: 'Watching',
-        bigThesis: '',
-        companyProfile: stock.companyProfile,
-        logicBlocks: [],
-        quizData: stock.quizData,
-        events: [],
-        newsTags: [],
-        dailyBriefing: '',
-        chartHistory: {
-          '1D': [stock.currentPrice],
-          '1W': [], '1M': [], '3M': [], '1Y': [], '5Y': []
-        }, 
-        chartNarratives: {
-          '1D': stock.chartContext,
-          '1W': '', '1M': '', '3M': '', '1Y': '', '5Y': ''
-        }
-      };
-      
-      selectDiscoveryStock(stock.ticker);
-      setUninvestedStockPreview(previewThesis);
-    }
-  };
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'insight':
-        return <InsightTab onNavigate={handleTabChange} />;
-      case 'my-thesis':
-        return <MyThesisTab onStockClick={setSelectedStock} onNavigate={handleTabChange} />;
-      case 'discovery':
-        return <DiscoveryTab onStockClick={handleStockClickFromDiscovery} />;
-      default:
-        return <MyThesisTab onStockClick={setSelectedStock} onNavigate={handleTabChange} />;
-    }
-  };
-
-  const handleNotificationClick = (stockId?: number) => {
+  const handleNotificationClick = (notification: Notification) => {
     setIsNotificationOpen(false);
-    if (stockId) {
-      const stock = data.myThesis.find(s => s.id === stockId);
-      if (stock) {
-        setSelectedStock(stock);
-        setActiveTab('my-thesis'); 
-      }
+    
+    // Try to find by ID first
+    let targetThesis = data.myThesis.find(s => s.id === notification.stockId);
+    
+    // Fallback: If not found by ID, try finding by Ticker (for robust deep linking)
+    if (!targetThesis && notification.ticker) {
+        targetThesis = data.myThesis.find(s => s.ticker === notification.ticker);
+    }
+
+    if (targetThesis) {
+      setSelectedStock(targetThesis);
+      setActiveTab('my-thesis'); 
     }
   };
 
@@ -103,7 +108,8 @@ const AppContent: React.FC = () => {
     <div className="h-screen w-full bg-[#000] flex justify-center items-center overflow-hidden font-sans selection:bg-app-accent selection:text-white">
       <main className="w-full max-w-[430px] h-full bg-app-bg relative shadow-2xl shadow-black border-x border-white/5 flex flex-col overflow-hidden">
         
-        {isOnboardingComplete && !selectedStock && !uninvestedStockPreview && !isBuilderOpen && !isNotificationOpen && (
+        {/* Global Header Actions (Bell) */}
+        {isOnboardingComplete && !selectedStock && !narrativeTarget && !isBuilderOpen && !isNotificationOpen && (
            <button 
              onClick={() => setIsNotificationOpen(true)}
              className="absolute top-6 right-6 z-50 p-2 bg-black/20 backdrop-blur-md rounded-full border border-white/5 hover:bg-white/10 transition-colors"
@@ -117,20 +123,17 @@ const AppContent: React.FC = () => {
            </button>
         )}
 
+        {/* Onboarding Overlay */}
         {!isOnboardingComplete && (
-          <OnboardingFlow onComplete={(newStock) => {
-            setIsOnboardingComplete(true);
-            setActiveTab('my-thesis');
-            if (newStock) {
-              setSelectedStock(newStock);
-            }
-          }} />
+          <OnboardingFlow onComplete={handleOnboardingComplete} />
         )}
 
+        {/* Dynamic Content Area */}
         <div className="flex-1 w-full relative overflow-hidden">
           {renderContent()}
         </div>
 
+        {/* Bottom Navigation */}
         <nav className="absolute bottom-0 left-0 right-0 z-40 bg-[#121212]/90 backdrop-blur-xl border-t border-white/5 pb-safe-bottom">
           <div className="flex justify-around items-center h-[88px] pb-4 px-2">
             <button
@@ -177,27 +180,40 @@ const AppContent: React.FC = () => {
           </div>
         </nav>
 
-        {(selectedStock || uninvestedStockPreview) && (
+        {/* --- Global Modals --- */}
+        
+        {/* 1. Logic HQ (Detail Modal) */}
+        {selectedStock && (
           <StockDetailModal 
-            stock={selectedStock || uninvestedStockPreview!} 
-            onClose={() => {
-              setSelectedStock(null);
-              setUninvestedStockPreview(null);
-            }} 
-            onAddLogic={() => handleOpenBuilder(selectedStock || uninvestedStockPreview!)}
+            stock={selectedStock} 
+            onClose={() => setSelectedStock(null)} 
+            onAddLogic={() => handleOpenBuilder(selectedStock)}
           />
         )}
         
+        {/* 2. Global Narrative Intro (For Uninvested Stocks) */}
+        {narrativeTarget && (
+          <div className="fixed inset-0 z-[200]">
+             <NarrativeIntro 
+               stock={narrativeTarget}
+               onClose={() => setNarrativeTarget(null)}
+               onComplete={handleGlobalNarrativeComplete}
+             />
+          </div>
+        )}
+
+        {/* 3. Watchpoint/Hypothesis Builder */}
         {isBuilderOpen && (
           <HypothesisBuilder 
             onClose={() => setIsBuilderOpen(false)} 
             onComplete={() => {
                 setIsBuilderOpen(false);
-                setActiveTab('my-thesis');
+                // Refresh data if needed, or just close
             }}
           />
         )}
 
+        {/* 4. Notification Center */}
         {isNotificationOpen && (
           <NotificationModal 
             onClose={() => setIsNotificationOpen(false)} 
@@ -208,6 +224,19 @@ const AppContent: React.FC = () => {
       </main>
     </div>
   );
+
+  function renderContent() {
+    switch (activeTab) {
+      case 'insight':
+        return <InsightTab onNavigate={handleTabChange} />;
+      case 'my-thesis':
+        return <MyThesisTab onStockClick={setSelectedStock} onNavigate={handleTabChange} />;
+      case 'discovery':
+        return <DiscoveryTab onStockClick={handleStockClickFromDiscovery} />;
+      default:
+        return <MyThesisTab onStockClick={setSelectedStock} onNavigate={handleTabChange} />;
+    }
+  }
 };
 
 const App: React.FC = () => {

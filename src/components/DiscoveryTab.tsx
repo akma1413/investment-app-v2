@@ -28,8 +28,10 @@ const DiscoveryTab: React.FC<DiscoveryTabProps> = ({ onStockClick }) => {
   };
 
   const handleStockClickInternal = (ticker: string) => {
+      // Find full stock data
       let stock = ALL_STOCKS.find(s => s.ticker === ticker);
       
+      // Fallback to search results if not in ALL_STOCKS (edge case safety)
       if (!stock) {
          stock = searchResults.find(s => s.ticker === ticker);
       }

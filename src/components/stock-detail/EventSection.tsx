@@ -10,8 +10,9 @@ interface EventCarouselProps {
 }
 
 export const EventCarouselCard: React.FC<EventCarouselProps> = ({ event, onComplete }) => {
-  const scenario = event.actionScenario;
-  if (!scenario) return null;
+  // Use event properties directly or mapped
+  const scenarios = event.scenarios || [];
+  if (scenarios.length === 0) return null;
 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedAction, setSelectedAction] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export const EventCarouselCard: React.FC<EventCarouselProps> = ({ event, onCompl
       }
   };
 
-  const isPreEvent = scenario.phase === 'Pre-Event' || event.status === 'Upcoming';
+  const isPreEvent = event.status === 'Upcoming';
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -47,9 +48,9 @@ export const EventCarouselCard: React.FC<EventCarouselProps> = ({ event, onCompl
                   {TEXT.STOCK_DETAIL.EVENT_STEP_1}
                </span>
             </div>
-            <h3 className="text-2xl font-black text-white mb-2 leading-tight">{scenario.title}</h3>
+            <h3 className="text-2xl font-black text-white mb-2 leading-tight">{event.title}</h3>
             <p className="text-zinc-400 font-medium">
-              {event.dDay} • {event.type}
+              {event.date} • {event.type}
             </p>
           </div>
         );
@@ -70,8 +71,8 @@ export const EventCarouselCard: React.FC<EventCarouselProps> = ({ event, onCompl
             <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 w-full">
                <p className="text-zinc-300 text-sm leading-relaxed">
                   {isPreEvent 
-                    ? (scenario.marketReaction || "시장은 이번 이벤트를 주시하고 있으며, 변동성이 확대될 수 있습니다.")
-                    : (scenario.marketReaction || "특이사항 없음")
+                    ? (event.marketReaction?.comment || "시장은 이번 이벤트를 주시하고 있으며, 변동성이 확대될 수 있습니다.")
+                    : (event.marketReaction?.comment || "특이사항 없음")
                   }
                </p>
             </div>
@@ -94,8 +95,8 @@ export const EventCarouselCard: React.FC<EventCarouselProps> = ({ event, onCompl
             <div className="bg-[#121212] p-4 rounded-2xl border border-white/5 w-full">
                <p className="text-zinc-300 text-sm leading-relaxed">
                   {isPreEvent 
-                    ? (scenario.myHypothesisCheck || "이 이벤트 결과가 회원님의 투자 가설을 지지할지, 혹은 훼손할지 지켜봐야 합니다.")
-                    : (scenario.myHypothesisCheck || "분석 내용 없음")
+                    ? (event.analysis?.cause || "이 이벤트 결과가 회원님의 투자 가설을 지지할지, 혹은 훼손할지 지켜봐야 합니다.")
+                    : (event.analysis?.cause || "분석 내용 없음")
                   }
                </p>
             </div>
@@ -113,7 +114,7 @@ export const EventCarouselCard: React.FC<EventCarouselProps> = ({ event, onCompl
                </span>
             </div>
             <p className="text-lg text-white font-medium leading-relaxed mb-2">
-               "{scenario.description}"
+               "{event.analysis?.context || "중요한 의사결정 시점입니다."}"
             </p>
           </div>
         );
@@ -157,10 +158,10 @@ export const EventCarouselCard: React.FC<EventCarouselProps> = ({ event, onCompl
                       </button>
                   </div>
                ) : (
-                 scenario.options.map((option, idx) => (
+                 scenarios.map((option, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setSelectedAction(option.actionType)}
+                      onClick={() => setSelectedAction(option.action)}
                       className="w-full p-4 rounded-xl bg-[#121212] border border-white/10 hover:bg-white/10 hover:border-white/20 active:scale-[0.98] transition-all flex items-center justify-between group"
                     >
                        <span className="font-bold text-zinc-300 group-hover:text-white">{option.label}</span>
@@ -249,7 +250,7 @@ export const ActionLogItem: React.FC<{ event: Event; decision: string }> = ({ ev
                 <div className="p-4 bg-[#121212]/50 text-sm">
                     <div className="mb-3">
                         <span className="text-xs font-bold text-zinc-500 block mb-1">이벤트 내용</span>
-                        <p className="text-zinc-300 leading-relaxed">{event.actionScenario?.description}</p>
+                        <p className="text-zinc-300 leading-relaxed">{event.analysis?.context || "설명 없음"}</p>
                     </div>
                     <div>
                          <span className="text-xs font-bold text-zinc-500 block mb-1">나의 선택</span>

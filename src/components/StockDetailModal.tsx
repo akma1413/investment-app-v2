@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { X, CheckCircle2, TrendingUp, BookOpen, ChevronDown, ChevronUp, ArrowRight, Activity, Calendar, Archive } from 'lucide-react';
-import { Thesis, TimeFrame } from '../types';
+import { X, TrendingUp, Activity, Calendar, Quote, ChevronDown, ChevronUp, AlertCircle, Eye, ArrowRight, CheckCircle2, Play, AlertTriangle } from 'lucide-react';
+import { Thesis, TimeFrame, Event } from '../types';
 import { useStore } from '../contexts/StoreContext';
-import { EventCarouselCard, ActionLogItem } from './stock-detail/EventSection';
-import { LogicHealthItem } from './stock-detail/LogicSection';
 import { NewsCard } from './stock-detail/NewsSection';
+import ImmersiveEventMode from './event/ImmersiveEventMode';
+import WatchpointBuilder from './narrative/WatchpointBuilder';
 import { TEXT } from '../constants/text';
 import { formatCurrency, formatRate, getRateColorClass } from '../utils/formatters';
 import { getChartCoordinates, getBezierPath } from '../utils/chartUtils';
@@ -35,38 +35,50 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
   const [activeTimeFrame, setActiveTimeFrame] = useState<TimeFrame>('1M');
   const [isProfileExpanded, setIsProfileExpanded] = useState(false);
   
-  const [archivedIndices, setArchivedIndices] = useState<number[]>([]);
-  const [eventDecisions, setEventDecisions] = useState<Record<number, string>>({});
-
+  // Interactive State
+  const [showEventMode, setShowEventMode] = useState(false);
+  const [showWatchpointBuilder, setShowWatchpointBuilder] = useState(false);
+  const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+  
   const isInvested = data.myThesis.some(t => t.ticker === stock.ticker);
 
-  const activeEvents = stock.events
-    .map((e, idx) => ({ ...e, originalIndex: idx }))
-    .filter(e => e.actionScenario !== undefined && !archivedIndices.includes(e.originalIndex));
-    
-  const archivedEvents = stock.events
-    .map((e, idx) => ({ ...e, originalIndex: idx }))
-    .filter(e => archivedIndices.includes(e.originalIndex));
+  // Find urgent/active event for Zone 1
+  const urgentEvent = stock.events.find(e => e.status === 'Upcoming' || e.status === 'Active');
 
-  const showActionCards = isInvested && !isLearningMode && activeEvents.length > 0;
-  const showActionLog = isInvested && !isLearningMode && archivedEvents.length > 0;
-
-  const handleEventComplete = (originalIndex: number, action: string) => {
-      setEventDecisions(prev => ({ ...prev, [originalIndex]: action }));
-      setArchivedIndices(prev => [...prev, originalIndex]);
-  };
-
+  // --- CHART LOGIC ---
   const chartPoints = stock.chartHistory[activeTimeFrame] || [];
   const chartNarrative = stock.chartNarratives[activeTimeFrame] || TEXT.STOCK_DETAIL.CHART_LOADING;
   const isPositive = chartPoints.length > 0 ? (chartPoints[chartPoints.length - 1] - chartPoints[0]) >= 0 : stock.changeRate >= 0;
   const trendColor = isPositive ? '#F87171' : '#60A5FA';
 
+  // Compact Chart Dimensions
   const svgWidth = 380;
-  const svgHeight = 160;
-  const padding = { top: 20, right: 40, bottom: 20, left: 0 };
+  const svgHeight = 120; // Reduced height for Zone 2 context
+  const padding = { top: 10, right: 40, bottom: 20, left: 0 };
   
   const { points: coords, min: minVal, max: maxVal, avgY } = getChartCoordinates(chartPoints, svgWidth, svgHeight, padding);
   const linePath = `M ${getBezierPath(coords)}`;
+
+  // --- LOGIC HEALTH CALC ---
+  const healthScore = stock.logicHealth?.score || 50;
+  const getHealthColor = (score: number) => {
+      if (score >= 70) return 'text-emerald-400 bg-emerald-500';
+      if (score >= 30) return 'text-amber-400 bg-amber-500';
+      return 'text-red-400 bg-red-500';
+  };
+  const healthColorClass = getHealthColor(healthScore);
+
+  // Handlers
+  const handleEventClick = (event: Event) => {
+      setActiveEvent(event);
+      setShowEventMode(true);
+  };
+
+  const handleWatchpointComplete = (selections: any[]) => {
+      // In a real app, this would dispatch an update to the store.
+      // For UI demo, we just close the builder.
+      setShowWatchpointBuilder(false);
+  };
 
   return (
     <div className={`fixed inset-0 flex items-end sm:items-center justify-center pointer-events-none ${isLearningMode ? 'z-[110]' : 'z-[100]'}`}>
@@ -77,6 +89,7 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
       
       <div className="w-full max-w-[430px] h-[92vh] bg-[#121212] rounded-t-[32px] pointer-events-auto overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300 relative border-t border-white/10 mx-auto">
         
+        {/* --- HEADER --- */}
         <header className="flex justify-between items-center px-6 py-5 border-b border-white/5 bg-[#121212]/95 backdrop-blur-md sticky top-0 z-10">
           <div>
             <div className="text-xs font-bold text-zinc-500 mb-0.5">{stock.ticker}</div>
@@ -97,42 +110,43 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
 
         <div className="flex-1 overflow-y-auto p-6 no-scrollbar pb-32">
           
-          {isLearningMode && (
-             <div className="bg-app-accent/10 border border-app-accent/30 rounded-2xl p-4 flex items-start space-x-3 animate-pulse-slow mb-6">
-                <BookOpen size={20} className="text-app-accent mt-0.5 shrink-0" />
-                <div>
-                   <h3 className="text-sm font-bold text-app-accent mb-1">힌트 찾는 중...</h3>
-                   <p className="text-xs text-zinc-300 leading-relaxed">
-                     차트와 뉴스를 보고 퀴즈 정답을 유추해보세요.
-                   </p>
+          {/* ZONE 1: ACTION TICKET (Integrated) */}
+          {urgentEvent && isInvested && (
+             <button 
+                onClick={() => handleEventClick(urgentEvent)}
+                className="w-full mb-6 bg-gradient-to-r from-zinc-800 to-zinc-900 border border-white/10 rounded-2xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group active:scale-[0.98] transition-all"
+             >
+                <div className="flex items-center gap-3 relative z-10">
+                    <div className="relative flex items-center justify-center w-3 h-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-app-positive opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-app-positive"></span>
+                    </div>
+                    <div className="text-left">
+                        <div className="text-[10px] font-bold text-app-positive uppercase tracking-wider mb-0.5">Action Required</div>
+                        <div className="text-sm font-bold text-white">{urgentEvent.title}</div>
+                    </div>
                 </div>
-             </div>
+                <div className="flex items-center text-xs font-bold text-zinc-400 group-hover:text-white transition-colors">
+                    대응하기 <ChevronDown className="-rotate-90 ml-1" size={16} />
+                </div>
+                {/* Background Decor */}
+                <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-app-positive/5 to-transparent pointer-events-none" />
+             </button>
           )}
 
-          {showActionCards && (
-             <section className="mb-4">
-               {activeEvents.map((evt) => (
-                  <EventCarouselCard 
-                    key={evt.originalIndex} 
-                    event={evt} 
-                    onComplete={(action) => handleEventComplete(evt.originalIndex, action)} 
-                  />
-               ))}
-             </section>
-          )}
-
-          <section className="mb-10">
+          {/* ZONE 2: CONTEXT ZONE (Chart) */}
+          <section className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white flex items-center">
-                    <Activity size={18} className="mr-2 text-zinc-500" />
-                    {TEXT.STOCK_DETAIL.CHART_TITLE}
+                  <h3 className="text-sm font-bold text-zinc-500 flex items-center uppercase tracking-wider">
+                    <Activity size={14} className="mr-1.5" />
+                    Market Context
                   </h3>
                   <div className="flex bg-white/5 rounded-lg p-0.5">
-                     {(['1D', '1W', '1M', '3M', '1Y', '5Y'] as TimeFrame[]).map(tf => (
+                     {(['1D', '1W', '1M', '3M', '1Y'] as TimeFrame[]).map(tf => (
                          <button 
                             key={tf}
                             onClick={() => setActiveTimeFrame(tf)}
-                            className={`px-2.5 py-1 text-[10px] font-bold rounded-md transition-all ${activeTimeFrame === tf ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}
+                            className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${activeTimeFrame === tf ? 'bg-zinc-700 text-white' : 'text-zinc-600'}`}
                          >
                             {tf}
                          </button>
@@ -140,125 +154,190 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
                   </div>
               </div>
 
-              <div className="w-full h-[160px] mb-4 bg-white/[0.02] rounded-2xl border border-white/5 relative">
+              {/* Compact Chart Container */}
+              <div className="w-full h-40 mb-3 bg-white/[0.02] rounded-xl border border-white/5 relative overflow-hidden">
                   {chartPoints.length > 0 ? (
-                  <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full overflow-visible">
+                  <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full overflow-visible opacity-80">
                         <defs>
                             <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={trendColor} stopOpacity="0.3" />
+                                <stop offset="0%" stopColor={trendColor} stopOpacity="0.2" />
                                 <stop offset="100%" stopColor={trendColor} stopOpacity="0" />
                             </linearGradient>
                         </defs>
                         <line x1={padding.left} y1={avgY} x2={svgWidth - padding.right} y2={avgY} stroke="#333" strokeDasharray="4 4" strokeWidth="1" />
                         <path d={`${linePath} L ${svgWidth - padding.right},${svgHeight - padding.bottom} L ${padding.left},${svgHeight - padding.bottom} Z`} fill="url(#chartGrad)" />
-                        <path d={linePath} fill="none" stroke={trendColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d={linePath} fill="none" stroke={trendColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 
-                        <text x={svgWidth} y={padding.top} className="text-[10px] fill-zinc-500 font-medium" textAnchor="end">
+                        {/* Min/Max Labels */}
+                        <text x={svgWidth} y={padding.top + 6} className="text-[9px] fill-zinc-600 font-medium" textAnchor="end">
                            {maxVal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </text>
-                        <text x={svgWidth} y={avgY + 3} className="text-[10px] fill-zinc-600 font-medium" textAnchor="end">Avg</text>
-                        <text x={svgWidth} y={svgHeight - padding.bottom} className="text-[10px] fill-zinc-500 font-medium" textAnchor="end">
+                        <text x={svgWidth} y={svgHeight - padding.bottom} className="text-[9px] fill-zinc-600 font-medium" textAnchor="end">
                            {minVal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </text>
-
-                        <g className="text-[10px] fill-zinc-500 font-medium">
-                            <text x={padding.left} y={svgHeight} textAnchor="start">{getXAxisLabels(activeTimeFrame)[0]}</text>
-                            <text x={(svgWidth - padding.right) / 2} y={svgHeight} textAnchor="middle">{getXAxisLabels(activeTimeFrame)[1]}</text>
-                            <text x={svgWidth - padding.right} y={svgHeight} textAnchor="end">{getXAxisLabels(activeTimeFrame)[2]}</text>
-                        </g>
                   </svg>
                   ) : (
-                      <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                      <div className="w-full h-full flex items-center justify-center text-zinc-600 text-xs">
                           {TEXT.STOCK_DETAIL.CHART_LOADING}
                       </div>
                   )}
               </div>
-              <div className="flex items-start space-x-2 text-sm text-zinc-400 bg-white/5 p-3 rounded-xl">
-                  <TrendingUp size={16} className="shrink-0 mt-0.5" />
+              <div className="flex items-start space-x-2 text-xs text-zinc-500 px-1">
+                  <TrendingUp size={12} className="shrink-0 mt-0.5" />
                   <span>{chartNarrative}</span>
               </div>
           </section>
 
-          {isInvested && (
+          {/* ZONE 3: LOGIC HEADQUARTERS (The Core) */}
+          {isInvested ? (
           <section className="mb-10 animate-in slide-in-from-bottom duration-500 delay-100">
-             <div className="flex items-center justify-between mb-4">
-                 <h3 className="text-lg font-bold text-white flex items-center">
-                    <CheckCircle2 size={18} className="mr-2 text-app-accent" />
-                    {TEXT.STOCK_DETAIL.LOGIC_TITLE}
-                 </h3>
-                 <span className="text-xs font-bold text-zinc-500 bg-white/5 px-2 py-1 rounded-md">Logic Health</span>
-             </div>
-             <div>
-                 {stock.logicBlocks.map(logic => (
-                     <LogicHealthItem key={logic.id} logic={logic} />
-                 ))}
-             </div>
-             {!isLearningMode && (
-                 <button 
-                    onClick={onAddLogic}
-                    className="w-full py-4 border-2 border-dashed border-zinc-800 rounded-2xl text-zinc-500 font-bold text-sm hover:text-white hover:border-zinc-600 transition-colors mt-2"
-                 >
-                     {TEXT.STOCK_DETAIL.BTN_ADD_LOGIC}
-                 </button>
-             )}
-          </section>
-          )}
+             
+             {/* Logic HQ Card */}
+             <div className="bg-[#1E1E1E] rounded-[28px] border border-zinc-700 shadow-xl overflow-hidden relative">
+                 {/* Decorative Header Line */}
+                 <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 opacity-80" />
+                 
+                 <div className="p-6">
+                    {/* A. Narrative Summary */}
+                    <div className="mb-8 relative">
+                        <Quote size={40} className="absolute -top-4 -left-2 text-zinc-700/50" />
+                        <h3 className="relative z-10 text-xl font-black text-white leading-tight italic">
+                            "{stock.narrative?.summary || '투자 가설을 수립해주세요.'}"
+                        </h3>
+                    </div>
 
-          <section className="mb-10">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center">
-                  <Calendar size={18} className="mr-2 text-zinc-500" />
-                  {TEXT.STOCK_DETAIL.NEWS_TITLE}
-              </h3>
-              <div>
-                  {stock.newsTags.length > 0 ? (
-                      stock.newsTags.map((news, idx) => (
-                          <NewsCard key={idx} news={news} />
-                      ))
-                  ) : (
-                      <div className="text-center py-8 text-zinc-500 bg-white/5 rounded-2xl border border-white/5">
-                          {TEXT.STOCK_DETAIL.NEWS_EMPTY}
-                      </div>
-                  )}
-              </div>
-          </section>
+                    {/* B. Logic Health Meter */}
+                    <div className="mb-8">
+                        <div className="flex items-end justify-between mb-2">
+                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Logic Health</span>
+                            <div className="text-right">
+                                <span className={`text-2xl font-black ${healthColorClass.split(' ')[0]}`}>{healthScore}</span>
+                                <span className="text-xs text-zinc-600 font-bold ml-1">/ 100</span>
+                            </div>
+                        </div>
+                        {/* Tug of War Bar */}
+                        <div className="h-4 bg-black rounded-full relative overflow-hidden border border-white/5">
+                            {/* Gradient Background */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-amber-500/20 to-emerald-500/20" />
+                            {/* Center Marker */}
+                            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-white/20" />
+                            {/* Score Indicator */}
+                            <div 
+                                className={`absolute top-0 bottom-0 w-1.5 ${healthColorClass.split(' ')[1]} shadow-[0_0_10px_currentColor] transition-all duration-1000 ease-out`}
+                                style={{ left: `${healthScore}%` }}
+                            />
+                        </div>
+                        <div className="flex justify-between mt-1 text-[10px] font-bold text-zinc-600 px-1">
+                            <span>Weak (Bear)</span>
+                            <span>Strong (Bull)</span>
+                        </div>
+                    </div>
 
-          {showActionLog && (
-             <section className="mb-10 pt-6 border-t border-white/5 animate-in slide-in-from-bottom">
-                 <h3 className="text-lg font-bold text-white mb-4 flex items-center">
-                     <Archive size={18} className="mr-2 text-zinc-500" />
-                     {TEXT.STOCK_DETAIL.ACTION_LOG_TITLE}
-                 </h3>
-                 <div className="bg-[#1E1E1E] rounded-2xl border border-white/5 overflow-hidden">
-                     {archivedEvents.map((evt) => (
-                         <ActionLogItem 
-                             key={evt.originalIndex} 
-                             event={evt} 
-                             decision={eventDecisions[evt.originalIndex]} 
-                         />
-                     ))}
+                    {/* C. Watchpoints List (Trigger) */}
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                                <Eye size={14} className="text-zinc-500" />
+                                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Key Watchpoints</span>
+                            </div>
+                            {stock.watchpoints.length > 0 && !isLearningMode && (
+                                <button 
+                                    onClick={() => setShowWatchpointBuilder(true)}
+                                    className="text-[10px] font-bold text-app-accent hover:text-white transition-colors"
+                                >
+                                    수정
+                                </button>
+                            )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                            {stock.watchpoints.length > 0 ? (
+                                stock.watchpoints.map((wp) => (
+                                    <div key={wp.id} className="flex items-start gap-3 p-3 rounded-xl bg-black/20 border border-white/5">
+                                        <div className="mt-1 w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" />
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-zinc-300 leading-snug">
+                                                {wp.question}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-6 bg-black/20 rounded-xl border border-dashed border-zinc-700 flex flex-col items-center justify-center">
+                                    <AlertTriangle size={24} className="text-zinc-600 mb-2" />
+                                    <p className="text-xs text-zinc-500 mb-3">투자의 감시 기준을 설정하세요</p>
+                                    <button 
+                                        onClick={() => setShowWatchpointBuilder(true)}
+                                        className="px-4 py-2 bg-zinc-800 rounded-full text-xs font-bold text-white hover:bg-zinc-700 transition-colors"
+                                    >
+                                        + 왓치포인트 설정
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Additional trigger if populated but user wants to edit/add */}
+                        {stock.watchpoints.length > 0 && !isLearningMode && (
+                             <button 
+                                onClick={() => setShowWatchpointBuilder(true)}
+                                className="w-full mt-4 py-3 border border-dashed border-zinc-700 rounded-xl text-zinc-500 font-bold text-xs hover:text-white hover:border-zinc-500 transition-colors flex items-center justify-center gap-1"
+                            >
+                                + 가설 수정/보완하기
+                            </button>
+                        )}
+                    </div>
                  </div>
+             </div>
+          </section>
+          ) : (
+             // Uninvested State: Simple Prompt
+             <section className="mb-10 py-8 text-center bg-[#1E1E1E] rounded-[28px] border border-dashed border-zinc-700/50">
+                 <p className="text-zinc-400 mb-4 font-medium">아직 수립된 가설이 없습니다.</p>
              </section>
           )}
 
-          <section className="pt-6 border-t border-white/5">
-              <h3 className="text-lg font-bold text-white mb-3">{TEXT.STOCK_DETAIL.COMPANY_INFO_TITLE}</h3>
-              <p className="text-zinc-400 leading-relaxed mb-4">
-                  {stock.companyProfile.summary}
-              </p>
-              
-              <div className={`overflow-hidden transition-all duration-300 ${isProfileExpanded ? 'max-h-[500px]' : 'max-h-0'}`}>
-                  <p className="text-zinc-500 text-sm leading-relaxed pb-4">
-                      {stock.companyProfile.description}
-                  </p>
+          {/* ZONE 4: REFERENCE ZONE (Secondary Info) */}
+          <section className="space-y-8 opacity-90">
+              {/* News */}
+              <div>
+                <h3 className="text-sm font-bold text-zinc-500 mb-4 flex items-center uppercase tracking-wider px-1">
+                    <Calendar size={14} className="mr-1.5" />
+                    {TEXT.STOCK_DETAIL.NEWS_TITLE}
+                </h3>
+                <div>
+                    {stock.newsTags.length > 0 ? (
+                        stock.newsTags.map((news, idx) => (
+                            <NewsCard key={idx} news={news} />
+                        ))
+                    ) : (
+                        <div className="text-center py-6 text-zinc-600 text-sm bg-white/5 rounded-2xl border border-white/5">
+                            {TEXT.STOCK_DETAIL.NEWS_EMPTY}
+                        </div>
+                    )}
+                </div>
               </div>
 
-              <button 
-                onClick={() => setIsProfileExpanded(!isProfileExpanded)}
-                className="flex items-center text-sm font-bold text-zinc-500 hover:text-white transition-colors"
-              >
-                  {isProfileExpanded ? TEXT.STOCK_DETAIL.BTN_COLLAPSE : TEXT.STOCK_DETAIL.BTN_EXPAND} 
-                  {isProfileExpanded ? <ChevronUp size={16} className="ml-1" /> : <ChevronDown size={16} className="ml-1" />}
-              </button>
+              {/* Company Info */}
+              <div className="pt-6 border-t border-white/5">
+                <h3 className="text-sm font-bold text-zinc-500 mb-3 uppercase tracking-wider px-1">{TEXT.STOCK_DETAIL.COMPANY_INFO_TITLE}</h3>
+                <p className="text-zinc-400 leading-relaxed mb-4 text-sm">
+                    {stock.companyProfile.summary}
+                </p>
+                
+                <div className={`overflow-hidden transition-all duration-300 ${isProfileExpanded ? 'max-h-[500px]' : 'max-h-0'}`}>
+                    <p className="text-zinc-500 text-xs leading-relaxed pb-4">
+                        {stock.companyProfile.description}
+                    </p>
+                </div>
+
+                <button 
+                    onClick={() => setIsProfileExpanded(!isProfileExpanded)}
+                    className="flex items-center text-xs font-bold text-zinc-500 hover:text-white transition-colors"
+                >
+                    {isProfileExpanded ? TEXT.STOCK_DETAIL.BTN_COLLAPSE : TEXT.STOCK_DETAIL.BTN_EXPAND} 
+                    {isProfileExpanded ? <ChevronUp size={14} className="ml-1" /> : <ChevronDown size={14} className="ml-1" />}
+                </button>
+              </div>
           </section>
 
         </div>
@@ -288,6 +367,26 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
         )}
 
       </div>
+      
+      {/* --- OVERLAYS (Rendered on top) --- */}
+      {showEventMode && activeEvent && (
+        <ImmersiveEventMode 
+            event={activeEvent} 
+            stock={stock}
+            onClose={() => setShowEventMode(false)} 
+        />
+      )}
+      
+      {showWatchpointBuilder && (
+        <div className="fixed inset-0 z-[150] bg-[#121212] animate-in fade-in duration-300">
+            <WatchpointBuilder 
+                stock={stock} 
+                onClose={() => setShowWatchpointBuilder(false)} 
+                onComplete={handleWatchpointComplete}
+            />
+        </div>
+      )}
+
     </div>
   );
 };
