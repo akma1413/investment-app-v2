@@ -9,17 +9,16 @@ import StockDetailModal from './components/StockDetailModal';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import NotificationModal from './components/NotificationModal';
 import NarrativeIntro from './components/narrative/NarrativeIntro';
-import WatchpointBuilder from './components/narrative/WatchpointBuilder'; // Correct import
+import WatchpointBuilder from './components/narrative/WatchpointBuilder'; 
 import { TEXT } from './constants/text';
 
 type Tab = 'insight' | 'my-thesis' | 'discovery';
 
 const AppContent: React.FC = () => {
-  const { data, selectDiscoveryStock, addToMyThesis } = useStore();
+  const { data, addToMyThesis } = useStore();
   const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('insight');
   
-  // Modals
   const [selectedStock, setSelectedStock] = useState<Thesis | null>(null); 
   const [narrativeTarget, setNarrativeTarget] = useState<SearchResultSample | null>(null); 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -28,7 +27,6 @@ const AppContent: React.FC = () => {
 
   const unreadCount = data.notifications.filter(n => !n.isRead).length;
 
-  // Onboarding Done -> Land on Detail
   const handleOnboardingComplete = (newThesis?: Thesis) => {
     setIsOnboardingComplete(true);
     setActiveTab('my-thesis');
@@ -95,19 +93,8 @@ const AppContent: React.FC = () => {
         </nav>
 
         {selectedStock && <StockDetailModal stock={selectedStock} onClose={() => setSelectedStock(null)} onAddLogic={() => handleOpenBuilder(selectedStock)} />}
-        
-        {narrativeTarget && (
-          <div className="fixed inset-0 z-[200]">
-             <NarrativeIntro stock={narrativeTarget} onClose={() => setNarrativeTarget(null)} onComplete={handleGlobalNarrativeComplete} />
-          </div>
-        )}
-
-        {isBuilderOpen && builderTarget && (
-          <div className="fixed inset-0 z-[200]">
-            <WatchpointBuilder stock={builderTarget} onClose={() => setIsBuilderOpen(false)} onComplete={() => setIsBuilderOpen(false)} />
-          </div>
-        )}
-
+        {narrativeTarget && <div className="fixed inset-0 z-[200]"><NarrativeIntro stock={narrativeTarget} onClose={() => setNarrativeTarget(null)} onComplete={handleGlobalNarrativeComplete} /></div>}
+        {isBuilderOpen && builderTarget && <div className="fixed inset-0 z-[200]"><WatchpointBuilder stock={builderTarget} onClose={() => setIsBuilderOpen(false)} onComplete={() => setIsBuilderOpen(false)} /></div>}
         {isNotificationOpen && <NotificationModal onClose={() => setIsNotificationOpen(false)} onNotificationClick={handleNotificationClick} />}
 
       </main>

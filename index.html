@@ -18,11 +18,11 @@
                 surface: '#1E1E1E',
                 text: {
                   primary: '#FFFFFF',
-                  secondary: '#A1A1AA', // Zinc 400
+                  secondary: '#A1A1AA',
                 },
-                accent: '#6366f1', // Indigo 500 (Professional)
-                positive: '#F87171', // Muted Rose Red
-                negative: '#60A5FA', // Muted Sky Blue
+                accent: '#6366f1',
+                positive: '#F87171',
+                negative: '#60A5FA',
               }
             },
             fontFamily: {
@@ -41,27 +41,29 @@
         color: #FFFFFF;
         -webkit-font-smoothing: antialiased;
       }
-      /* Hide scrollbar for Chrome, Safari and Opera */
       .no-scrollbar::-webkit-scrollbar {
           display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
       }
     </style>
-  <script type="importmap">
+    <script type="importmap">
 {
   "imports": {
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0"
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "url": "https://aistudiocdn.com/url@^0.11.4"
   }
 }
 </script>
-</head>
+  </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>

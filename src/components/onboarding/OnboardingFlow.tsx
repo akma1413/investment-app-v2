@@ -23,7 +23,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [selectedStock, setSelectedStock] = useState<SearchResultSample | null>(null);
   const [finalThesis, setFinalThesis] = useState<Thesis | undefined>(undefined);
 
-  // Timers
   useEffect(() => {
     if (step === 'splash') { const timer = setTimeout(() => setStep('intro'), 2500); return () => clearTimeout(timer); }
   }, [step]);
@@ -31,7 +30,6 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     if (step === 'intro') { const timer = setInterval(() => setSlideIndex(prev => (prev + 1) % 3), 4000); return () => clearTimeout(timer); }
   }, [step]);
 
-  // Scan Logic (Fix: Include Domestic)
   useEffect(() => {
     if (step === 'ocr' && scanComplete) {
        const allHoldings = [...data.user.holdings.domestic, ...data.user.holdings.overseas];
@@ -51,25 +49,23 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const handleStockSelect = (stock: SearchResultSample) => {
     setSelectedStock(stock);
-    setStep('narrative'); // Direct to Narrative, No Quiz!
+    setStep('narrative'); 
   };
 
   const handleNarrativeComplete = (decision: 'Buy' | 'Watch') => {
     if (!selectedStock) return;
     const status = decision === 'Buy' ? 'Invested' : 'Watching';
-    // Create thesis
     const newThesis = addToMyThesis(selectedStock, [], status);
     setFinalThesis(newThesis);
     setStep('permission');
   };
 
   const handleFinalComplete = () => {
-    onComplete(finalThesis); // Pass result to App
+    onComplete(finalThesis); 
   };
 
   return (
     <div className="absolute inset-0 z-[200] bg-[#121212] flex flex-col items-center justify-center text-white overflow-hidden font-sans">
-      {/* Shortened rendering for brevity, assuming standard components */}
       {step === 'splash' && (
         <div className="text-center"><h1 className="text-7xl font-black text-indigo-500">{TEXT.COMMON.APP_NAME}</h1></div>
       )}
