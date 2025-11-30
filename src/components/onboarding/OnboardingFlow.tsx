@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Camera, Bell, Check, Layers } from 'lucide-react';
 import { useStore, ALL_STOCKS } from '../../contexts/StoreContext';
@@ -16,7 +17,7 @@ type Step =
   | 'name' 
   | 'ocr' 
   | 'stock-select'
-  | 'narrative' // New Step
+  | 'narrative'
   | 'permission';
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
@@ -24,18 +25,23 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   const [name, setName] = useState("");
   const { data, updateUserName, addToMyThesis } = useStore();
   
+  // Carousel State
   const [slideIndex, setSlideIndex] = useState(0);
 
+  // OCR/Scanning State
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
 
+  // Selection State
   const [scannedStocks, setScannedStocks] = useState<SearchResultSample[]>([]);
   const [selectedStock, setSelectedStock] = useState<SearchResultSample | null>(null);
   
-  // New state to hold the created thesis after Narrative step
+  // Final Thesis State (to pass to parent)
   const [finalThesis, setFinalThesis] = useState<Thesis | null>(null);
 
-  // --- TIMERS & EFFECTS ---
+  // --- EFFECTS ---
+
+  // Splash Screen Timer
   useEffect(() => {
     if (step === 'splash') {
       const timer = setTimeout(() => setStep('intro'), 2500);
@@ -43,6 +49,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   }, [step]);
 
+  // Intro Carousel Auto-play
   useEffect(() => {
     if (step === 'intro') {
       const timer = setInterval(() => {
@@ -52,14 +59,19 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     }
   }, [step]);
 
+  // OCR Simulation Logic (UPDATED)
   useEffect(() => {
     if (step === 'ocr' && scanComplete) {
-       const overseasHoldings = data.user.holdings.overseas;
+       // Pull ALL holdings from User data (simulated OCR result)
+       // Fix: Include both domestic and overseas stocks
+       const allHoldings = [...data.user.holdings.domestic, ...data.user.holdings.overseas];
        
+       // Match with Rich Data (ALL_STOCKS)
        const matches = ALL_STOCKS.filter(stock => 
-          overseasHoldings.some(h => h.ticker === stock.ticker)
+          allHoldings.some(h => h.ticker === stock.ticker)
        );
        
+       // Fallback to top 3 stocks if no matches found in mock data
        if (matches.length > 0) {
            setScannedStocks(matches);
        } else {
@@ -69,6 +81,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
   }, [step, scanComplete, data.user.holdings]);
 
   // --- HANDLERS ---
+
   const handleNameSubmit = () => {
     if (name.trim().length > 0) {
       updateUserName(name);
@@ -87,35 +100,37 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
 
   const handleStockSelect = (stock: SearchResultSample) => {
     setSelectedStock(stock);
-    setStep('narrative'); // Changed from 'quiz' to 'narrative'
+    // Directly go to Narrative phase (Removed legacy Quiz step)
+    setStep('narrative'); 
   };
 
-  // Handler for Narrative Completion
   const handleNarrativeComplete = (decision: 'Buy' | 'Watch') => {
     if (!selectedStock) return;
 
     const status = decision === 'Buy' ? 'Invested' : 'Watching';
     const amount = decision === 'Buy' ? '100만원 미만' : undefined;
 
-    // 1. Save to Store immediately
-    // Note: We pass empty array for logicIds as we are in narrative phase
+    // 1. Create Thesis in Store
+    // We pass empty array [] for selectedLogicIds as we are using the new Narrative flow
     const newThesis = addToMyThesis(selectedStock, [], status, amount);
     
-    // 2. Store locally to pass to parent later
+    // 2. Capture the created thesis to pass to App later
     setFinalThesis(newThesis);
 
-    // 3. Move to Permission
+    // 3. Move to Permission step
     setStep('permission');
   };
 
   const handleFinalComplete = () => {
-    // Pass the finalThesis we created in the previous step
+    // Pass the finalThesis to parent so it can open the Detail Modal immediately
     if (finalThesis) {
         onComplete(finalThesis);
     } else {
         onComplete();
     }
   };
+
+  // --- RENDER ---
 
   return (
     <div className="absolute inset-0 z-[200] bg-[#121212] flex flex-col items-center justify-center text-white overflow-hidden font-sans">
@@ -142,6 +157,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               className="absolute inset-0 flex transition-transform duration-500 ease-out" 
               style={{ transform: `translateX(-${slideIndex * 100}%)` }}
             >
+              {/* Slide 1 */}
               <div className="w-full h-full flex-shrink-0 flex flex-col justify-center px-8">
                 <h1 className="text-4xl font-black leading-tight mb-6">
                   떨어질 땐 불안해서 팔고,<br/>
@@ -152,6 +168,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 </div>
               </div>
               
+              {/* Slide 2 */}
               <div className="w-full h-full flex-shrink-0 flex flex-col justify-center px-8">
                  <h1 className="text-4xl font-black leading-tight mb-6">
                   남들이 살 때 따라 사고<br/>
@@ -162,6 +179,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                 </div>
               </div>
               
+              {/* Slide 3 */}
                <div className="w-full h-full flex-shrink-0 flex flex-col justify-center px-8">
                  <h1 className="text-4xl font-black leading-tight mb-6">
                   당신의 직감을<br/>
@@ -174,6 +192,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
               </div>
             </div>
             
+            {/* Indicators */}
             <div className="absolute bottom-32 left-0 right-0 flex justify-center space-x-2">
               {[0, 1, 2].map(idx => (
                 <div 
@@ -201,7 +220,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {/* STEP 3: NAME */}
+      {/* STEP 3: NAME INPUT */}
       {step === 'name' && (
         <div className="w-full h-full px-8 pt-24 pb-8 flex flex-col animate-in slide-in-from-right duration-300">
           <div className="flex-1">
@@ -231,7 +250,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {/* STEP 4: OCR */}
+      {/* STEP 4: OCR (ASSET IMPORT) */}
       {step === 'ocr' && (
         <div className="w-full h-full flex flex-col animate-in slide-in-from-right duration-300">
           <div className="flex-1 px-8 pt-24">
@@ -286,7 +305,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {/* STEP 5: STOCK SELECT */}
+      {/* STEP 5: STOCK SELECTION */}
       {step === 'stock-select' && (
         <div className="w-full h-full flex flex-col px-6 pt-24 animate-in slide-in-from-right duration-300">
           <div className="flex-1">
@@ -321,7 +340,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {/* STEP 6: NARRATIVE (New) */}
+      {/* STEP 6: NARRATIVE INTRODUCTION */}
       {step === 'narrative' && selectedStock && (
          <div className="fixed inset-0 z-[210] bg-[#121212] animate-in slide-in-from-right duration-300">
              <NarrativeIntro 
@@ -332,7 +351,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
          </div>
       )}
 
-      {/* STEP 7: PERMISSION */}
+      {/* STEP 7: PERMISSION & COMPLETION */}
       {step === 'permission' && (
         <div className="w-full h-full flex flex-col px-8 pt-24 pb-12 animate-in slide-in-from-right duration-300 text-center">
           <div className="flex-1 flex flex-col items-center justify-center">

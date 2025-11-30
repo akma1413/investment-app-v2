@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { CalendarClock, Lightbulb, Compass, Bell } from 'lucide-react';
 import { StoreProvider, useStore } from './contexts/StoreContext';
@@ -8,10 +7,10 @@ import InsightTab from './components/InsightTab';
 import MyThesisTab from './components/MyThesisTab';
 import DiscoveryTab from './components/DiscoveryTab';
 import StockDetailModal from './components/StockDetailModal';
-import HypothesisBuilder from './components/HypothesisBuilder';
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import NotificationModal from './components/NotificationModal';
-import NarrativeIntro from './components/narrative/NarrativeIntro'; // Import NarrativeIntro
+import NarrativeIntro from './components/narrative/NarrativeIntro';
+import WatchpointBuilder from './components/narrative/WatchpointBuilder';
 import { TEXT } from './constants/text';
 
 type Tab = 'insight' | 'my-thesis' | 'discovery';
@@ -24,7 +23,8 @@ const AppContent: React.FC = () => {
   // UI State for Overlays/Modals
   const [selectedStock, setSelectedStock] = useState<Thesis | null>(null); // Logic HQ (Detail Modal)
   const [narrativeTarget, setNarrativeTarget] = useState<SearchResultSample | null>(null); // Global Narrative Modal
-  const [isBuilderOpen, setIsBuilderOpen] = useState(false); // Watchpoint/Hypothesis Builder
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false); // Watchpoint Builder
+  const [builderTarget, setBuilderTarget] = useState<Thesis | SearchResultSample | null>(null); // Target for Builder
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   const unreadCount = data.notifications.filter(n => !n.isRead).length;
@@ -40,7 +40,9 @@ const AppContent: React.FC = () => {
     
     // If a thesis was created during onboarding, land directly on its Logic HQ
     if (newThesis) {
-      setSelectedStock(newThesis);
+      setTimeout(() => {
+        setSelectedStock(newThesis);
+      }, 100);
     }
   };
 
@@ -52,8 +54,6 @@ const AppContent: React.FC = () => {
     if (existingThesis) {
       // Case A: Invested/Watching -> Go to Logic HQ
       setSelectedStock(existingThesis);
-      // Optional: switch tab to show context, but modal covers it anyway
-      // setActiveTab('my-thesis'); 
     } else {
       // Case B: Uninvested -> Start Narrative Flow
       setNarrativeTarget(stock);
@@ -75,12 +75,16 @@ const AppContent: React.FC = () => {
 
     // 3. Land on Logic HQ
     setActiveTab('my-thesis');
-    setSelectedStock(newThesis);
+    setTimeout(() => {
+      setSelectedStock(newThesis);
+    }, 100);
   };
 
   // Logic Builder (Add/Edit Watchpoints for existing thesis)
   const handleOpenBuilder = (stock?: Thesis | SearchResultSample) => {
     if (stock) {
+        setBuilderTarget(stock);
+        // Ensure discovery context is set if needed by internal components (optional)
         selectDiscoveryStock(stock.ticker);
     }
     setSelectedStock(null);
@@ -202,15 +206,19 @@ const AppContent: React.FC = () => {
           </div>
         )}
 
-        {/* 3. Watchpoint/Hypothesis Builder */}
-        {isBuilderOpen && (
-          <HypothesisBuilder 
-            onClose={() => setIsBuilderOpen(false)} 
-            onComplete={() => {
-                setIsBuilderOpen(false);
-                // Refresh data if needed, or just close
-            }}
-          />
+        {/* 3. Watchpoint Builder (Replaces HypothesisBuilder) */}
+        {isBuilderOpen && builderTarget && (
+          <div className="fixed inset-0 z-[150] bg-[#121212] animate-in fade-in duration-300">
+            <WatchpointBuilder 
+                stock={builderTarget}
+                onClose={() => setIsBuilderOpen(false)} 
+                onComplete={(selections) => {
+                    // In a real app, dispatch update to store with selections
+                    console.log("Updated watchpoints:", selections);
+                    setIsBuilderOpen(false);
+                }}
+            />
+          </div>
         )}
 
         {/* 4. Notification Center */}

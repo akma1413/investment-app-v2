@@ -1,5 +1,6 @@
 
 
+
 export interface User {
   name: string;
   profileMsg: string;
@@ -235,6 +236,8 @@ export interface SearchResultSample {
   narrative: NarrativeProfile;
   watchpoints: Watchpoint[];
   availableLogicBlocks: LogicBlock[]; // Legacy
+
+  events?: Event[]; // Optional events for seeding data
 }
 
 export interface RecentSearch {

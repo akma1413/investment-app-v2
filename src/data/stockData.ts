@@ -1,24 +1,7 @@
 
 
-import { SearchResultSample, AppData, Thesis } from '../types';
+import { SearchResultSample, AppData, Thesis, Event } from '../types';
 import { generateChartData } from '../utils/chartUtils';
-
-// Helper to create default LogicHealth
-const defaultHealth = {
-  score: 80,
-  status: 'Good' as const,
-  history: []
-};
-
-// Helper for placeholder narrative
-const pendingNarrative = {
-  summary: "데이터 업데이트 대기 중...",
-  whyNow: "분석 중",
-  floor: "분석 중",
-  upside: "분석 중",
-  debate: [],
-  theBet: "분석 중"
-};
 
 export const ALL_STOCKS: SearchResultSample[] = [
   {
@@ -191,8 +174,34 @@ export const ALL_STOCKS: SearchResultSample[] = [
       description: "구글은 검색, 유튜브, 안드로이드를 보유한 거대 IT 기업입니다."
     },
     chartContext: "최근 반독점 소송 이슈로 등락을 반복하고 있습니다.",
-    narrative: pendingNarrative,
-    watchpoints: [],
+    narrative: {
+      summary: "AI 시대의 최종 승자는 결국 데이터와 자본을 가진 구글이다.",
+      whyNow: "Gemini 2.0 공개와 AI 검색 서비스 본격화.",
+      floor: "검색 시장의 압도적 점유율과 유튜브의 막강한 락인(Lock-in) 효과.",
+      upside: "AI 에이전트 서비스 선점을 통한 검색 시장 TAM 확대.",
+      debate: ["검색 광고 잠식(Cannibalization) 우려", "반독점 규제"],
+      theBet: "구글이 AI 시대에도 검색 왕좌를 지킬 수 있다고 믿습니까?"
+    },
+    watchpoints: [
+      {
+        id: 1,
+        question: "[검색] AI 검색(SGE)이 광고 매출을 갉아먹진 않을까요?",
+        context: "생성형 AI 답변 상단 노출은 기존 검색 광고 수익 모델과 충돌할 수 있습니다.",
+        options: [
+          { label: "광고 매출 방어/확대 (Bull)", side: "Bull" },
+          { label: "수익성 훼손 (Bear)", side: "Bear" }
+        ]
+      },
+      {
+        id: 2,
+        question: "[AI 성능] Gemini가 GPT를 확실히 압도할까요?",
+        context: "후발주자 이미지를 벗고 AI 리더십을 되찾아야 주가 리레이팅이 가능합니다.",
+        options: [
+          { label: "기술적 우위 증명 (Bull)", side: "Bull" },
+          { label: "실망스러운 성능 (Bear)", side: "Bear" }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -205,8 +214,34 @@ export const ALL_STOCKS: SearchResultSample[] = [
       description: "엔비디아 GPU에 필수적으로 들어가는 HBM을 주도하는 기업입니다."
     },
     chartContext: "HBM 리더십 부각되며 신고가 랠리 중입니다.",
-    narrative: pendingNarrative,
-    watchpoints: [],
+    narrative: {
+      summary: "HBM 시장의 확실한 1등, 슈퍼사이클의 최대 수혜주.",
+      whyNow: "HBM3E 독점 공급 확대 및 HBM4 기술 로드맵 구체화.",
+      floor: "엔비디아 밸류체인 내 핵심 파트너 지위.",
+      upside: "메모리 반도체 사이클 상승과 맞물린 실적 폭발.",
+      debate: ["경쟁사(삼성)의 진입", "사이클 고점 논란"],
+      theBet: "하이닉스가 HBM 기술 격차를 2년 이상 유지할 수 있을까요?"
+    },
+    watchpoints: [
+      {
+        id: 1,
+        question: "[경쟁] 삼성전자가 HBM 시장에 진입하면 위험할까요?",
+        context: "경쟁사 진입은 공급 과잉을 유발할 수도, 혹은 전체 파이를 키울 수도 있습니다.",
+        options: [
+          { label: "기술 격차 유지 (Bull)", side: "Bull" },
+          { label: "점유율 하락 (Bear)", side: "Bear" }
+        ]
+      },
+      {
+        id: 2,
+        question: "[사이클] 메모리 업황이 고점은 아닐까요?",
+        context: "AI 수요 외에 PC/모바일 등 전통적 수요의 회복세도 중요합니다.",
+        options: [
+          { label: "장기 호황 진입 (Bull)", side: "Bull" },
+          { label: "수요 둔화 징후 (Bear)", side: "Bear" }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -216,8 +251,25 @@ export const ALL_STOCKS: SearchResultSample[] = [
     changeRate: -1.2,
     companyProfile: { summary: "대한민국 대표 반도체/가전 기업", description: "메모리 반도체 1위 기업입니다." },
     chartContext: "박스권 흐름을 보이고 있습니다.",
-    narrative: pendingNarrative,
-    watchpoints: [],
+    narrative: {
+      summary: "돌아온 반도체 왕좌, AI 시대에도 유효할까?",
+      whyNow: "HBM3E 퀄 테스트 통과 임박설 및 파운드리 턴어라운드 기대.",
+      floor: "D램 시장의 압도적 1위 지위와 풍부한 현금성 자산.",
+      upside: "HBM 공급 본격화 및 파운드리 대형 고객사 확보.",
+      debate: ["HBM 기술력 의구심", "파운드리 적자 지속"],
+      theBet: "삼성전자가 HBM과 파운드리에서 '패스트 팔로워' 저력을 보여줄까요?"
+    },
+    watchpoints: [
+      {
+        id: 1,
+        question: "[HBM] 엔비디아에 HBM3E를 납품할 수 있을까요?",
+        context: "현재 주가의 가장 큰 할인 요소입니다. 납품 성공 시 즉각적인 리레이팅이 기대됩니다.",
+        options: [
+          { label: "납품 성공 (Bull)", side: "Bull" },
+          { label: "품질 이슈 지속 (Bear)", side: "Bear" }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -227,8 +279,25 @@ export const ALL_STOCKS: SearchResultSample[] = [
     changeRate: 1.5,
     companyProfile: { summary: "이커머스와 클라우드의 제왕", description: "세계 최대 온라인 쇼핑몰이자 AWS 기업입니다." },
     chartContext: "클라우드 성장세 재확인 중입니다.",
-    narrative: pendingNarrative,
-    watchpoints: [],
+    narrative: {
+      summary: "클라우드(AWS)로 벌고, 물류 효율화로 남긴다.",
+      whyNow: "AWS의 생성형 AI 매출 기여 시작 및 물류 투자 회수기 진입.",
+      floor: "글로벌 1위 클라우드 인프라와 이커머스 지배력.",
+      upside: "물류 비용 절감을 통한 리테일 마진의 구조적 개선.",
+      debate: ["MS Azure의 추격", "소비 경기 둔화"],
+      theBet: "아마존의 '효율화' 전략이 이익률 급등으로 이어질까요?"
+    },
+    watchpoints: [
+      {
+        id: 1,
+        question: "[클라우드] AWS가 MS Azure의 추격을 따돌릴까요?",
+        context: "생성형 AI 경쟁에서 MS에 뒤처진다는 인식을 씻어내야 합니다.",
+        options: [
+          { label: "1위 수성 (Bull)", side: "Bull" },
+          { label: "점유율 축소 (Bear)", side: "Bear" }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -238,11 +307,183 @@ export const ALL_STOCKS: SearchResultSample[] = [
     changeRate: 2.1,
     companyProfile: { summary: "만년 2등의 반란", description: "엔비디아의 독주를 막을 유일한 대항마입니다." },
     chartContext: "AI 칩 기대감이 반영되고 있습니다.",
-    narrative: pendingNarrative,
-    watchpoints: [],
+    narrative: {
+      summary: "엔비디아 독점의 틈새를 파고드는 AI 칩 2인자.",
+      whyNow: "MI300X 출시와 빅테크들의 '엔비디아 의존도 낮추기' 니즈 확대.",
+      floor: "데이터센터 CPU 시장 점유율 확대.",
+      upside: "AI 가속기 시장에서 의미 있는 점유율(10%+) 확보.",
+      debate: ["SW 생태계(ROCm) 열세", "가격 경쟁 심화"],
+      theBet: "AMD가 AI 칩 시장에서 '가성비' 전략으로 성공할 수 있을까요?"
+    },
+    watchpoints: [
+      {
+        id: 1,
+        question: "[점유율] AI 칩 시장 점유율을 얼마나 가져올까요?",
+        context: "엔비디아의 공급 부족은 AMD에게 기회입니다. 이 기회를 잡아야 합니다.",
+        options: [
+          { label: "점유율 10% 이상 (Bull)", side: "Bull" },
+          { label: "미미한 수준 (Bear)", side: "Bear" }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   }
 ];
+
+// --- EVENT INJECTION ---
+// We inject events into ALL_STOCKS to ensure every stock has at least one event.
+
+// 1. JYP (035900)
+const jypEvents: Event[] = [
+  {
+    id: 'evt-jyp-1',
+    title: 'VCHA 글로벌 데뷔 성과 발표',
+    date: 'D-Day',
+    type: 'Issue',
+    status: 'Active',
+    checkpoints: [
+      { watchpointId: 1, status: 'Pending' }, // 현지화 WP
+      { watchpointId: 2, status: 'Pass' }     // 본업 WP
+    ],
+    scenarios: [
+        { label: "추가 매수 (시스템 수출 확신)", action: 'buy' },
+        { label: "관망 (초기 지표 확인 필요)", action: 'hold' },
+        { label: "비중 축소 (모멘텀 소멸)", action: 'sell' }
+    ],
+    marketReaction: {
+      priceChange: '+4.2%',
+      volumeChange: 'High',
+      comment: '데뷔곡 스트리밍 수치가 예상치를 상회하며 투심이 개선되고 있습니다.'
+    },
+    analysis: {
+      cause: '현지화 그룹의 초기 지표가 긍정적입니다.',
+      context: '엔터주의 밸류에이션 리레이팅을 위한 핵심 조건이 충족되었습니다.'
+    }
+  }
+];
+
+// 2. Google (GOOGL)
+const googlEvents: Event[] = [
+  {
+    id: 'evt-googl-1',
+    title: 'Gemini 2.0 모델 공개',
+    date: 'D-7',
+    type: 'Product Launch',
+    status: 'Upcoming',
+    checkpoints: [
+      { watchpointId: 2, status: 'Pending' } // AI 성능 WP
+    ],
+    scenarios: [
+        { label: "비중 확대 (기술 리더십 회복)", action: 'buy' },
+        { label: "보유 (Hold)", action: 'hold' },
+        { label: "매도 (경쟁 열위 지속)", action: 'sell' }
+    ],
+    marketReaction: {
+      priceChange: '-',
+      volumeChange: '-',
+      comment: '-'
+    },
+    analysis: {
+      cause: '',
+      context: 'GPT-5 출시 전 기술적 우위를 증명해야 하는 중요한 모멘텀입니다.'
+    }
+  }
+];
+
+// 3. Tesla (TSLA)
+const tslaEvents: Event[] = [
+  {
+    id: 'evt-tsla-1',
+    title: '로보택시(Robotaxi) 데이',
+    date: 'Today',
+    type: 'IR Event',
+    status: 'Active',
+    checkpoints: [
+        { watchpointId: 2, status: 'Pending' } // AI/FSD WP
+    ],
+    scenarios: [
+        { label: "강력 매수 (비전 현실화)", action: 'buy' },
+        { label: "관망 (구체성 부족)", action: 'hold' },
+        { label: "실망 매도 (지연 우려)", action: 'sell' }
+    ],
+    marketReaction: {
+      priceChange: '-1.5%',
+      volumeChange: 'Medium',
+      comment: '발표 내용이 다소 추상적이라는 평가로 실망 매물이 나오고 있습니다.'
+    },
+    analysis: {
+      cause: '시제품 공개는 있었으나 구체적인 상용화 타임라인이 부재합니다.',
+      context: '단기적으로는 실망감이 우세하나, 장기 방향성은 재확인되었습니다.'
+    }
+  }
+];
+
+// 4. NVIDIA (NVDA)
+const nvdaEvents: Event[] = [
+    {
+        id: 'evt-nvda-1',
+        title: '3분기 실적 발표',
+        date: 'D-14',
+        type: 'Earnings',
+        status: 'Upcoming',
+        checkpoints: [{ watchpointId: 1, status: 'Pending' }],
+        scenarios: [
+            { label: "비중 확대 (서프라이즈)", action: 'buy' },
+            { label: "유지 (예상 부합)", action: 'hold' }
+        ],
+        marketReaction: { priceChange: '-', volumeChange: '-', comment: '-' },
+        analysis: { cause: '', context: '높아진 눈높이를 충족시킬 수 있을지가 관건입니다.' }
+    }
+];
+
+// 5. Palantir (PLTR)
+const pltrEvents: Event[] = [
+    {
+        id: 'evt-pltr-1',
+        title: '신규 정부 계약 수주 공시',
+        date: 'Yesterday',
+        type: 'Contract',
+        status: 'Active',
+        checkpoints: [{ watchpointId: 1, status: 'Pass' }], // 민간 확장 WP와는 다르지만 긍정적
+        scenarios: [
+            { label: "추가 매수", action: 'buy' },
+            { label: "이익 실현", action: 'sell' }
+        ],
+        marketReaction: { priceChange: '+3.1%', volumeChange: 'High', comment: '대형 수주 소식에 강세입니다.' },
+        analysis: { cause: '안정적인 정부 매출 기반을 재확인했습니다.', context: '민간 확장 기대감과 더불어 하방을 지지합니다.' }
+    }
+];
+
+// 6. Generic Event Generator
+const createGenericEvent = (ticker: string, watchpointId: number): Event => ({
+    id: `evt-${ticker}-gen`,
+    title: '분기 실적 발표',
+    date: 'D-3',
+    type: 'Earnings',
+    status: 'Upcoming',
+    checkpoints: [{ watchpointId, status: 'Pending' }],
+    scenarios: [
+        { label: "비중 확대", action: 'buy' },
+        { label: "관망", action: 'hold' },
+        { label: "비중 축소", action: 'sell' }
+    ],
+    marketReaction: { priceChange: '-', volumeChange: '-', comment: '-' },
+    analysis: { cause: '', context: '실적 발표 결과에 따라 변동성이 확대될 수 있습니다.' }
+});
+
+// --- ASSIGN EVENTS ---
+ALL_STOCKS[0].events = jypEvents;  // JYP
+ALL_STOCKS[1].events = pltrEvents; // PLTR
+ALL_STOCKS[2].events = tslaEvents; // TSLA
+ALL_STOCKS[3].events = nvdaEvents; // NVDA
+ALL_STOCKS[4].events = googlEvents;// GOOGL
+
+// Assign generic events to others
+ALL_STOCKS[5].events = [createGenericEvent('000660', 2)]; // SK Hynix
+ALL_STOCKS[6].events = [createGenericEvent('005930', 1)]; // Samsung
+ALL_STOCKS[7].events = [createGenericEvent('AMZN', 1)];   // AMZN
+ALL_STOCKS[8].events = [createGenericEvent('AMD', 1)];    // AMD
+
 
 export const getInitialData = (): AppData => ({
   user: {
@@ -255,7 +496,9 @@ export const getInitialData = (): AppData => ({
     holdings: {
       domestic: [
         { id: 'd1', ticker: '000660', name: 'SK하이닉스', quantity: 44, currency: 'KRW', valuation: 8140000, profitValue: -547180, profitRate: -6.3 },
-        { id: 'd2', ticker: '005930', name: '삼성전자', quantity: 120, currency: 'KRW', valuation: 9000000, profitValue: -183600, profitRate: -2.0 }
+        { id: 'd2', ticker: '005930', name: '삼성전자', quantity: 120, currency: 'KRW', valuation: 9000000, profitValue: -183600, profitRate: -2.0 },
+        // ADDED JYP Ent. for Onboarding/Event Scenario Testing
+        { id: 'd3', ticker: '035900', name: 'JYP Ent.', quantity: 50, currency: 'KRW', valuation: 3100000, profitValue: -450000, profitRate: -12.5 }
       ],
       overseas: [
         { id: 'o1', ticker: 'GOOGL', name: '구글', quantity: 98, currency: 'USD', valuation: 23520000, profitValue: 12408900, profitRate: 111.7 },
@@ -310,7 +553,7 @@ export const getInitialData = (): AppData => ({
       title: "구글(GOOGL) 실적 발표 완료",
       desc: "결과가 나왔습니다. 가설 적중 여부를 확인하세요.",
       stockId: 1,
-      ticker: "GOOGL", // Added ticker for reliable linking
+      ticker: "GOOGL", 
       timestamp: "방금 전",
       isRead: false
     }

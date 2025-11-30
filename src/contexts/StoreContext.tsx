@@ -1,7 +1,8 @@
 
 
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { AppData, StoreContextType, SearchResultSample, Thesis } from '../types';
+import { AppData, StoreContextType, SearchResultSample, Thesis, LogicHealth } from '../types';
 import { ALL_STOCKS, getInitialData } from '../data/stockData';
 import { generateChartData } from '../utils/chartUtils';
 import { updateThesisHealth } from '../utils/logicUtils';
@@ -15,12 +16,15 @@ const syncHoldingsToThesis = (currentData: AppData): Thesis[] => {
   const { user, myThesis } = currentData;
   const allHoldings = [...user.holdings.domestic, ...user.holdings.overseas];
   
+  // Start with existing thesis list to preserve any manually added ones
   const updatedThesisList = [...myThesis];
 
   allHoldings.forEach(holding => {
+    // 1. Deduplication: Check if thesis already exists for this ticker
     const existingIndex = updatedThesisList.findIndex(t => t.ticker === holding.ticker);
 
     if (existingIndex >= 0) {
+      // If exists, ensure it is marked as Invested (syncing asset status)
       if (updatedThesisList[existingIndex].status !== 'Invested') {
         updatedThesisList[existingIndex] = {
           ...updatedThesisList[existingIndex],
@@ -28,6 +32,8 @@ const syncHoldingsToThesis = (currentData: AppData): Thesis[] => {
         };
       }
     } else {
+      // 2. Creation: Create new Thesis if not found
+      // Try to find rich data from ALL_STOCKS to populate narrative/watchpoints
       const richData = ALL_STOCKS.find(s => s.ticker === holding.ticker);
       
       const calculatedPrice = holding.quantity > 0 ? holding.valuation / holding.quantity : 0;
@@ -45,13 +51,14 @@ const syncHoldingsToThesis = (currentData: AppData): Thesis[] => {
       };
 
       const newThesis: Thesis = {
-        id: Date.now() + Math.floor(Math.random() * 10000), 
+        id: Date.now() + Math.floor(Math.random() * 100000), 
         ticker: holding.ticker,
         name: holding.name,
         currentPrice: finalPrice,
         changeRate: changeRate,
         status: 'Invested',
         
+        // CRITICAL: Populate Narrative & Watchpoints from Rich Data
         narrative: richData?.narrative || {
             summary: "포트폴리오에서 연동된 자산입니다.",
             whyNow: "정보 없음",
@@ -66,10 +73,11 @@ const syncHoldingsToThesis = (currentData: AppData): Thesis[] => {
             status: 'Warning', 
             history: []
         },
-        logicBlocks: richData?.availableLogicBlocks || [],
+        // Legacy cleanup: Set to empty
+        logicBlocks: [],
         
         companyProfile: richData?.companyProfile || { summary: "정보 없음", description: "" },
-        events: [],
+        events: richData?.events || [],
         newsTags: [],
         dailyBriefing: "포트폴리오 자산이 연동되었습니다. 가설을 점검해주세요.",
         
@@ -142,26 +150,24 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const addToMyThesis = (stock: SearchResultSample, selectedLogicIds: number[], investmentType: string, amount?: string): Thesis => {
-    // 0. Safety Check: Deduplication
+    // 1. Deduplication Check
     const existingThesis = data.myThesis.find(t => t.ticker === stock.ticker);
+    
     if (existingThesis) {
+        // If it exists but was 'Watching', and now user 'Invests', update status
         if (existingThesis.status !== 'Invested' && investmentType === 'Invested') {
-           const updated = { ...existingThesis, status: 'Invested' as const };
+           const updated: Thesis = { ...existingThesis, status: 'Invested' };
            setData(prev => ({
              ...prev,
              myThesis: prev.myThesis.map(t => t.id === existingThesis.id ? updated : t)
            }));
            return updated;
         }
+        // Return existing if no status change needed
         return existingThesis;
     }
 
-    // 1. Create Logic Blocks (Legacy support)
-    const selectedLogicBlocks = stock.availableLogicBlocks.filter(l => 
-        selectedLogicIds.includes(Number(l.id))
-    ).map(l => ({ ...l, isActive: true }));
-
-    // 2. Generate Dummy Charts
+    // 2. Generate Dummy Charts (since sample data might lack full history)
     const trend = stock.changeRate > 0 ? 'up' : 'down';
     const chartHistory = {
         '1D': generateChartData(stock.currentPrice, 24, trend),
@@ -180,23 +186,28 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         currentPrice: stock.currentPrice,
         changeRate: stock.changeRate,
         status: investmentType as 'Invested' | 'Watching',
+        
+        // Populate Narrative & Watchpoints from Stock Data
         narrative: stock.narrative || {
-            summary: selectedLogicBlocks[0]?.title || "나만의 투자 가설",
+            summary: stock.companyProfile.summary,
             whyNow: "",
             floor: "",
             upside: "",
             debate: [],
-            theBet: ""
+            theBet: "가설 수립 필요"
         },
-        companyProfile: stock.companyProfile,
-        logicBlocks: selectedLogicBlocks,
         watchpoints: stock.watchpoints || [],
         logicHealth: {
-            score: 50, // Start neutral
+            score: 50, // Neutral start
             status: 'Warning',
             history: []
         },
-        events: [], // Initially empty, in a real app these would come from backend
+        
+        // Clear Legacy
+        logicBlocks: [],
+        
+        companyProfile: stock.companyProfile,
+        events: stock.events || [], 
         newsTags: [],
         dailyBriefing: "새로운 투자 가설이 등록되었습니다. 시장의 변화를 면밀히 관찰하세요.",
         chartHistory: chartHistory,
@@ -208,7 +219,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
-    // 4. Update State
+    // 4. Update State with Notification
     setData(prev => ({
         ...prev,
         myThesis: [newThesis, ...prev.myThesis],
@@ -220,7 +231,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 desc: '성공적으로 저장되었습니다. 아이디어 탭에서 확인하세요.',
                 timestamp: '방금 전',
                 isRead: false,
-                stockId: newThesis.id
+                stockId: newThesis.id,
+                ticker: newThesis.ticker // For deep linking
             },
             ...prev.notifications
         ]
@@ -242,10 +254,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               // Update Event Status & History
               updatedEvents[eventIndex] = {
                   ...updatedEvents[eventIndex],
-                  status: 'Completed', // Mark as handled
+                  status: 'Completed', 
                   myActionHistory: {
                       decision,
-                      date: 'Today' // Simplified date
+                      date: 'Today'
                   }
               };
               updatedThesis.events = updatedEvents;
