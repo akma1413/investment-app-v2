@@ -213,8 +213,11 @@ export interface SearchResultSample {
   chartContext: string;
   narrative: NarrativeProfile;
   watchpoints: Watchpoint[];
-  events?: Event[]; // Added events array
+  events?: Event[];
   availableLogicBlocks: LogicBlock[];
+  chartHistory?: Record<TimeFrame, number[]>;
+  chartNarratives?: Record<TimeFrame, string>;
+  newsTags?: NewsItem[];
 }
 
 export interface RecentSearch {

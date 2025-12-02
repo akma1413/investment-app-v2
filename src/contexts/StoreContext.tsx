@@ -66,7 +66,7 @@ const syncHoldingsToThesis = (currentData: AppData): Thesis[] => {
         newsTags: [],
         dailyBriefing: "포트폴리오 연동 완료. 가설을 점검하세요.",
 
-        chartHistory: {
+        chartHistory: richData?.chartHistory || {
           '1D': generateChartData(finalPrice, 24, trend),
           '1W': generateChartData(finalPrice, 20, 'volatile'),
           '1M': generateChartData(finalPrice * 0.95, 30, trend),
@@ -74,7 +74,7 @@ const syncHoldingsToThesis = (currentData: AppData): Thesis[] => {
           '1Y': generateChartData(finalPrice * 0.8, 60, trend),
           '5Y': generateChartData(finalPrice * 0.5, 60, 'up'),
         },
-        chartNarratives: { '1D': '', '1W': '', '1M': '', '3M': '', '1Y': '', '5Y': '' }
+        chartNarratives: richData?.chartNarratives || { '1D': '', '1W': '', '1M': '', '3M': '', '1Y': '', '5Y': '' }
       };
 
       updatedThesisList.push(newThesis);
@@ -153,7 +153,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       newsTags: [],
       dailyBriefing: "신규 가설 등록 완료.",
-      chartHistory: {
+      chartHistory: stock.chartHistory || {
         '1D': generateChartData(stock.currentPrice, 24, trend),
         '1W': generateChartData(stock.currentPrice, 20, 'volatile'),
         '1M': generateChartData(stock.currentPrice * 0.95, 30, trend),
@@ -161,7 +161,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         '1Y': generateChartData(stock.currentPrice * 0.8, 60, trend),
         '5Y': generateChartData(stock.currentPrice * 0.5, 60, 'up'),
       },
-      chartNarratives: { '1D': '', '1W': '', '1M': '', '3M': '', '1Y': '', '5Y': '' }
+      chartNarratives: stock.chartNarratives || { '1D': '', '1W': '', '1M': '', '3M': '', '1Y': '', '5Y': '' }
     };
 
     setData(prev => ({
