@@ -1,6 +1,5 @@
-
-import React, { useEffect, useState } from 'react';
-import { X, ArrowRight, Info, TrendingUp, Check, Edit3, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ArrowRight, ChevronRight, TrendingUp, ShieldCheck, Zap, Scale, Gavel, CheckCircle2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { SearchResultSample, Thesis } from '../../types';
 
@@ -10,283 +9,238 @@ interface NarrativeIntroProps {
   onClose: () => void;
 }
 
+const STEPS = [
+  { id: 'history', title: 'Why Now?', icon: TrendingUp, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+  { id: 'floor', title: 'The Floor', icon: ShieldCheck, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  { id: 'upside', title: 'The Upside', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+  { id: 'debate', title: 'Debate', icon: Scale, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+  { id: 'final', title: 'Final Bet', icon: Gavel, color: 'text-rose-400', bg: 'bg-rose-500/10' },
+];
+
 const NarrativeIntro: React.FC<NarrativeIntroProps> = ({ stock, onComplete, onClose }) => {
   const { narrative } = stock;
-  const [isVisible, setIsVisible] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [customAnswer, setCustomAnswer] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const [isWhyImportantExpanded, setIsWhyImportantExpanded] = useState(false);
-  const [isCurrentSituationExpanded, setIsCurrentSituationExpanded] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [direction, setDirection] = useState(1); // 1 for forward, -1 for backward
+  const contentRef = useRef<HTMLDivElement>(null);
 
+  // Reset scroll on step change
   useEffect(() => {
-    setIsVisible(true);
-  }, []);
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [currentStep]);
 
-  if (!narrative) return null;
+  if (!narrative || !narrative.steps) return null;
 
-  const handleAnswerSelect = (answer: string) => {
-    setSelectedAnswer(answer);
-    setShowCustomInput(false);
-    setCustomAnswer('');
-  };
-
-  const handleCustomAnswerClick = () => {
-    setShowCustomInput(true);
-    setSelectedAnswer(null);
-  };
-
-  const handleProceed = () => {
-    if (selectedAnswer || (showCustomInput && customAnswer.trim())) {
-      // User has made a choice (either fixed answer or custom)
-      onComplete('Buy');
+  const handleNext = () => {
+    if (currentStep < STEPS.length - 1) {
+      setDirection(1);
+      setCurrentStep(prev => prev + 1);
     }
   };
 
-  const canProceed = selectedAnswer !== null || (showCustomInput && customAnswer.trim().length > 0);
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setDirection(-1);
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  const handleFinalDecision = (decision: 'Buy' | 'Watch') => {
+    console.log('NarrativeIntro: handleFinalDecision called with', decision);
+    onComplete(decision);
+  };
+
+  const renderStepContent = () => {
+    const stepId = STEPS[currentStep].id;
+
+    // Common Markdown Components
+    const mdComponents = {
+      p: ({ node, ...props }: any) => <p className="text-zinc-300 leading-relaxed mb-4 text-lg" {...props} />,
+      strong: ({ node, ...props }: any) => <strong className="text-white font-bold" {...props} />,
+      ul: ({ node, ...props }: any) => <ul className="list-disc pl-5 mb-4 space-y-2 text-zinc-300" {...props} />,
+      li: ({ node, ...props }: any) => <li className="pl-1" {...props} />,
+    };
+
+    switch (stepId) {
+      case 'history':
+        return (
+          <div className="animate-in slide-in-from-right duration-500 fade-in">
+            <h2 className="text-3xl font-black text-white mb-6 leading-tight">{narrative.steps.history.title}</h2>
+            <div className="prose prose-invert max-w-none">
+              <ReactMarkdown components={mdComponents}>{narrative.steps.history.content}</ReactMarkdown>
+            </div>
+          </div>
+        );
+      case 'floor':
+        return (
+          <div className="animate-in slide-in-from-right duration-500 fade-in">
+            <h2 className="text-3xl font-black text-white mb-6 leading-tight">{narrative.steps.floor.title}</h2>
+            <div className="prose prose-invert max-w-none">
+              <ReactMarkdown components={mdComponents}>{narrative.steps.floor.content}</ReactMarkdown>
+            </div>
+          </div>
+        );
+      case 'upside':
+        return (
+          <div className="animate-in slide-in-from-right duration-500 fade-in">
+            <h2 className="text-3xl font-black text-white mb-6 leading-tight">{narrative.steps.upside.title}</h2>
+            <div className="prose prose-invert max-w-none">
+              <ReactMarkdown components={mdComponents}>{narrative.steps.upside.content}</ReactMarkdown>
+            </div>
+          </div>
+        );
+      case 'debate':
+        return (
+          <div className="animate-in slide-in-from-right duration-500 fade-in">
+            <h2 className="text-2xl font-black text-white mb-2 leading-tight">{narrative.steps.debate.title}</h2>
+            <h3 className="text-xl font-bold text-zinc-400 mb-8 italic">"{narrative.steps.debate.question}"</h3>
+
+            <div className="space-y-6">
+              {/* Bulls */}
+              <div className="bg-[#1E1E1E] rounded-2xl p-5 border-l-4 border-emerald-500">
+                <h4 className="text-emerald-400 font-bold mb-3 flex items-center gap-2">
+                  <TrendingUp size={18} /> 긍정적 시그널 (Bullish)
+                </h4>
+                <div className="space-y-3">
+                  {narrative.steps.debate.bulls.map((bull, idx) => (
+                    <div key={idx}>
+                      {bull.items.map((item, i) => (
+                        <div key={i} className="text-zinc-300 text-sm mb-2 last:mb-0">
+                          <ReactMarkdown components={{ strong: ({ node, ...props }: any) => <span className="text-emerald-200 font-bold" {...props} /> }}>
+                            {item}
+                          </ReactMarkdown>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bears */}
+              <div className="bg-[#1E1E1E] rounded-2xl p-5 border-l-4 border-rose-500">
+                <h4 className="text-rose-400 font-bold mb-3 flex items-center gap-2">
+                  <ShieldCheck size={18} /> 부정적 시그널 (Bearish)
+                </h4>
+                <div className="space-y-3">
+                  {narrative.steps.debate.bears.map((bear, idx) => (
+                    <div key={idx}>
+                      {bear.items.map((item, i) => (
+                        <div key={i} className="text-zinc-300 text-sm mb-2 last:mb-0">
+                          <ReactMarkdown components={{ strong: ({ node, ...props }: any) => <span className="text-rose-200 font-bold" {...props} /> }}>
+                            {item}
+                          </ReactMarkdown>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'final':
+        return (
+          <div className="animate-in slide-in-from-right duration-500 fade-in pb-20">
+            <h2 className="text-3xl font-black text-white mb-6 leading-tight">{narrative.steps.final.title}</h2>
+            <div className="prose prose-invert max-w-none mb-8">
+              <ReactMarkdown components={mdComponents}>{narrative.steps.final.content}</ReactMarkdown>
+            </div>
+
+            <div className="space-y-4">
+              {narrative.steps.final.options.map((option, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleFinalDecision(option.value)}
+                  className={`w-full p-5 rounded-2xl text-left transition-all border-2 group relative overflow-hidden ${option.value === 'Buy'
+                    ? 'bg-indigo-600/10 border-indigo-500 hover:bg-indigo-600/20'
+                    : 'bg-zinc-800/50 border-zinc-600 hover:bg-zinc-800'
+                    }`}
+                >
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-lg font-black ${option.value === 'Buy' ? 'text-indigo-400' : 'text-zinc-400'}`}>
+                        {option.label}
+                      </span>
+                      {option.value === 'Buy' && <CheckCircle2 className="text-indigo-400" size={24} />}
+                    </div>
+                    <p className="text-sm text-zinc-300 leading-relaxed font-medium">
+                      {option.desc}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const CurrentIcon = STEPS[currentStep].icon;
 
   return (
-    <div className="flex flex-col h-full bg-[#121212] relative">
+    <div className="flex flex-col h-full bg-[#121212] relative font-sans">
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 p-6 z-20 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
-        <button onClick={onClose} className="p-2 -ml-2 rounded-full bg-black/20 backdrop-blur-md text-white/80 hover:text-white border border-white/5">
-          <X size={24} />
-        </button>
-        <div className="px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-xs font-bold text-zinc-300">
-          Phase 1. 핵심 질문 이해하기
+      <div className="px-6 py-5 flex items-center justify-between bg-[#121212]/95 backdrop-blur-md sticky top-0 z-20 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-zinc-400 transition-colors">
+            <X size={24} />
+          </button>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Investment Thesis</span>
+            <span className="text-sm font-bold text-white">{stock.name}</span>
+          </div>
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="flex gap-1">
+          {STEPS.map((step, idx) => (
+            <div
+              key={step.id}
+              className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentStep ? `w-8 ${step.bg.replace('/10', '')}` :
+                idx < currentStep ? 'w-4 bg-zinc-600' : 'w-4 bg-zinc-800'
+                }`}
+            />
+          ))}
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
+      {/* Main Content Area */}
+      <div
+        ref={contentRef}
+        className="flex-1 overflow-y-auto no-scrollbar p-6 relative"
+      >
+        {/* Step Badge */}
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${STEPS[currentStep].bg} ${STEPS[currentStep].color} text-xs font-bold mb-6`}>
+          <CurrentIcon size={14} />
+          <span>Step {currentStep + 1}. {STEPS[currentStep].title}</span>
+        </div>
 
-        {/* 1. Question Hero + Tags */}
-        <section className={`min-h-[80vh] flex flex-col justify-center px-8 relative border-b border-white/5 transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-          <div className="mb-6">
-            <span className="text-zinc-500 font-bold text-lg tracking-wider">{stock.ticker}</span>
-            <h1 className="text-5xl font-black text-white mt-1 leading-tight">{stock.name}</h1>
-          </div>
-
-          {/* Tags */}
-          {narrative.tags && narrative.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-8">
-              {narrative.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 rounded-full bg-app-accent/10 border border-app-accent/30 text-app-accent text-sm font-bold"
-                >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Main Question */}
-          <div className="relative">
-            <div className="absolute -left-2 top-0 w-1 h-full bg-gradient-to-b from-app-accent to-transparent rounded-full"></div>
-            <h2 className="text-3xl font-black text-white leading-tight pl-6">
-              {narrative.question}
-            </h2>
-          </div>
-
-          <div className="absolute bottom-10 left-0 right-0 flex justify-center animate-bounce opacity-50">
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-xs text-zinc-500">아래로 스크롤하여 분석 보기</span>
-              <div className="w-px h-12 bg-gradient-to-b from-zinc-500 to-transparent"></div>
-            </div>
-          </div>
-        </section>
-
-        {/* 2. Why Important */}
-        <section className="py-20 px-6 border-b border-white/5 bg-zinc-900/30">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400">
-              <Info size={24} />
-            </div>
-            <h2 className="text-2xl font-black text-white">왜 중요한가?</h2>
-          </div>
-
-          {/* Summary - Clickable Toggle */}
-          <button
-            onClick={() => setIsWhyImportantExpanded(!isWhyImportantExpanded)}
-            className="w-full mb-6 p-4 rounded-2xl bg-blue-500/5 border-l-4 border-blue-400 hover:bg-blue-500/10 transition-all text-left"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <p className="text-lg font-bold text-blue-100 leading-relaxed flex-1">
-                {narrative.description.why_important.summary}
-              </p>
-              <ChevronDown
-                size={24}
-                className={`text-blue-400 shrink-0 transition-transform duration-300 ${
-                  isWhyImportantExpanded ? 'rotate-180' : ''
-                }`}
-              />
-            </div>
-          </button>
-
-          {/* Detailed Content with Markdown - Expandable */}
-          {isWhyImportantExpanded && (
-            <div className="prose prose-invert prose-lg max-w-none animate-in slide-in-from-top-4 duration-300">
-              <ReactMarkdown
-                components={{
-                  p: ({node, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4" {...props} />,
-                  strong: ({node, ...props}) => <strong className="text-white font-bold" {...props} />,
-                  em: ({node, ...props}) => <em className="text-blue-300" {...props} />,
-                }}
-              >
-                {narrative.description.why_important.content}
-              </ReactMarkdown>
-            </div>
-          )}
-        </section>
-
-        {/* 3. Current Situation */}
-        <section className="py-20 px-6 border-b border-white/5">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-              <TrendingUp size={24} />
-            </div>
-            <h2 className="text-2xl font-black text-white">현재 상황</h2>
-          </div>
-
-          {/* Summary - Clickable Toggle */}
-          <button
-            onClick={() => setIsCurrentSituationExpanded(!isCurrentSituationExpanded)}
-            className="w-full mb-6 p-4 rounded-2xl bg-emerald-500/5 border-l-4 border-emerald-400 hover:bg-emerald-500/10 transition-all text-left"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <p className="text-lg font-bold text-emerald-100 leading-relaxed flex-1">
-                {narrative.description.current_situation.summary}
-              </p>
-              <ChevronDown
-                size={24}
-                className={`text-emerald-400 shrink-0 transition-transform duration-300 ${
-                  isCurrentSituationExpanded ? 'rotate-180' : ''
-                }`}
-              />
-            </div>
-          </button>
-
-          {/* Detailed Content with Markdown - Expandable */}
-          {isCurrentSituationExpanded && (
-            <div className="prose prose-invert prose-lg max-w-none animate-in slide-in-from-top-4 duration-300">
-              <ReactMarkdown
-                components={{
-                  p: ({node, ...props}) => <p className="text-zinc-300 leading-relaxed mb-4" {...props} />,
-                  strong: ({node, ...props}) => <strong className="text-white font-bold" {...props} />,
-                  em: ({node, ...props}) => <em className="text-emerald-300" {...props} />,
-                }}
-              >
-                {narrative.description.current_situation.content}
-              </ReactMarkdown>
-            </div>
-          )}
-        </section>
-
-        {/* 4. Answer Selection */}
-        <section className="py-24 px-6 flex flex-col">
-          <div className="text-center mb-8">
-            <span className="text-app-accent font-bold tracking-widest text-sm mb-4 block">YOUR ANSWER</span>
-            <h2 className="text-3xl font-black text-white leading-tight mb-4">
-              당신의 생각은?
-            </h2>
-            <p className="text-zinc-400 text-sm">
-              아래 선택지 중 하나를 선택하거나, 직접 입력해주세요.
-            </p>
-          </div>
-
-          <div className="space-y-4 mb-6">
-            {/* Fixed Answer Choices */}
-            {narrative.answer_choices && narrative.answer_choices.map((choice, idx) => {
-              const isSelected = selectedAnswer === choice;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => handleAnswerSelect(choice)}
-                  className={`w-full p-6 rounded-2xl text-left transition-all border-2 ${
-                    isSelected
-                      ? 'bg-app-accent/10 border-app-accent text-white shadow-lg'
-                      : 'bg-[#1E1E1E] border-white/10 text-zinc-300 hover:border-white/30'
-                  }`}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                      isSelected ? 'border-app-accent bg-app-accent' : 'border-zinc-600'
-                    }`}>
-                      {isSelected && <Check size={16} strokeWidth={3} className="text-black" />}
-                    </div>
-                    <div className="flex-1">
-                      <ReactMarkdown
-                        components={{
-                          p: ({node, ...props}) => <p className="leading-relaxed" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-black text-white" {...props} />,
-                        }}
-                      >
-                        {choice}
-                      </ReactMarkdown>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-
-            {/* Custom Input Option */}
-            <button
-              onClick={handleCustomAnswerClick}
-              className={`w-full p-6 rounded-2xl text-left transition-all border-2 ${
-                showCustomInput
-                  ? 'bg-purple-500/10 border-purple-400 text-white'
-                  : 'bg-[#1E1E1E] border-white/10 text-zinc-300 hover:border-white/30'
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <div className={`mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                  showCustomInput ? 'border-purple-400 bg-purple-400' : 'border-zinc-600'
-                }`}>
-                  {showCustomInput && <Edit3 size={16} strokeWidth={3} className="text-black" />}
-                </div>
-                <div className="flex-1">
-                  <span className="font-bold">직접 입력하기</span>
-                  <p className="text-sm text-zinc-500 mt-1">나만의 생각을 작성해보세요.</p>
-                </div>
-              </div>
-            </button>
-
-            {/* Custom Input Field */}
-            {showCustomInput && (
-              <div className="animate-in slide-in-from-bottom-4 duration-300">
-                <textarea
-                  value={customAnswer}
-                  onChange={(e) => setCustomAnswer(e.target.value)}
-                  placeholder="당신의 생각을 자유롭게 작성해주세요..."
-                  className="w-full p-4 rounded-2xl bg-black border-2 border-purple-400/50 text-white placeholder:text-zinc-600 focus:outline-none focus:border-purple-400 resize-none"
-                  rows={4}
-                  autoFocus
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Proceed Button */}
-          <button
-            onClick={handleProceed}
-            disabled={!canProceed}
-            className={`w-full py-5 rounded-2xl text-xl font-black transition-all flex items-center justify-center gap-2 ${
-              canProceed
-                ? 'bg-white text-black shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-95'
-                : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
-            }`}
-          >
-            <span>다음 단계로</span>
-            <ArrowRight size={24} strokeWidth={3} />
-          </button>
-
-          <p className="mt-6 text-xs text-zinc-600 text-center">
-            선택하신 판단을 바탕으로 감시할 지표를 설정합니다.
-          </p>
-        </section>
-
+        {renderStepContent()}
       </div>
+
+      {/* Footer Navigation */}
+      {currentStep < STEPS.length - 1 && (
+        <div className="p-6 bg-gradient-to-t from-[#121212] via-[#121212] to-transparent z-20">
+          <button
+            onClick={handleNext}
+            className="w-full py-4 bg-white text-black rounded-2xl font-bold text-lg shadow-[0_0_30px_rgba(255,255,255,0.1)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 hover:bg-zinc-100"
+          >
+            <span>다음으로</span>
+            <ArrowRight size={20} />
+          </button>
+          {currentStep > 0 && (
+            <button
+              onClick={handleBack}
+              className="w-full mt-3 py-2 text-zinc-500 text-sm font-medium hover:text-zinc-300"
+            >
+              이전 단계로
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
