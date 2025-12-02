@@ -4,7 +4,8 @@ import { X, TrendingUp, Activity, Calendar, Quote, ChevronDown, ChevronUp, Alert
 import { Thesis, TimeFrame, Event } from '../types';
 import { useStore } from '../contexts/StoreContext';
 import { NewsCard } from './stock-detail/NewsSection';
-import ImmersiveEventMode from './event/ImmersiveEventMode';
+import { ImmersiveEventMode } from './event/ImmersiveEventMode';
+import { EventTicket } from './event/EventTicket';
 import WatchpointBuilder from './narrative/WatchpointBuilder';
 import { TEXT } from '../constants/text';
 import { formatCurrency, formatRate, getRateColorClass } from '../utils/formatters';
@@ -18,11 +19,14 @@ interface StockDetailModalProps {
     onAddLogic?: () => void;
 }
 
+
 const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isLearningMode = false, onReturnToQuiz, onAddLogic }) => {
-    const { data } = useStore();
+    const { data, recordEventDecision } = useStore();
     const [activeTimeFrame, setActiveTimeFrame] = useState<TimeFrame>('1M');
     const [isProfileExpanded, setIsProfileExpanded] = useState(false);
 
+    // Get latest stock data from store to ensure updates (like Event completion) are reflected
+    const latestStock = data.myThesis.find(t => t.id === stock.id) || stock;
     // Interactive State
     const [showEventMode, setShowEventMode] = useState(false);
     const [showWatchpointBuilder, setShowWatchpointBuilder] = useState(false);
@@ -30,17 +34,17 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
 
     // Debug logging
     console.log('StockDetailModal - showWatchpointBuilder:', showWatchpointBuilder);
-    console.log('StockDetailModal - stock.watchpoints:', stock.watchpoints);
+    console.log('StockDetailModal - stock.watchpoints:', latestStock.watchpoints);
 
-    const isInvested = data.myThesis.some(t => t.ticker === stock.ticker);
+    const isInvested = data.myThesis.some(t => t.ticker === latestStock.ticker);
 
     // Find urgent/active event for Zone 1
-    const urgentEvent = stock.events.find(e => e.status === 'Upcoming' || e.status === 'Active');
+    const urgentEvent = latestStock.events.find(e => e.status === 'Upcoming' || e.status === 'Active');
 
     // --- CHART LOGIC ---
-    const chartPoints = stock.chartHistory[activeTimeFrame] || [];
-    const chartNarrative = stock.chartNarratives[activeTimeFrame] || TEXT.STOCK_DETAIL.CHART_LOADING;
-    const isPositive = chartPoints.length > 0 ? (chartPoints[chartPoints.length - 1] - chartPoints[0]) >= 0 : stock.changeRate >= 0;
+    const chartPoints = latestStock.chartHistory[activeTimeFrame] || [];
+    const chartNarrative = latestStock.chartNarratives[activeTimeFrame] || TEXT.STOCK_DETAIL.CHART_LOADING;
+    const isPositive = chartPoints.length > 0 ? (chartPoints[chartPoints.length - 1] - chartPoints[0]) >= 0 : latestStock.changeRate >= 0;
     const trendColor = isPositive ? '#F87171' : '#60A5FA';
 
     // Compact Chart Dimensions
@@ -68,6 +72,14 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
 
     const handleWatchpointComplete = (selections: any[]) => {
         setShowWatchpointBuilder(false);
+    };
+
+    const handleEventComplete = (decision: 'buy' | 'hold' | 'sell') => {
+        if (activeEvent) {
+            recordEventDecision(stock.id, activeEvent.id, decision);
+            setShowEventMode(false);
+            setActiveEvent(null);
+        }
     };
 
     return (
@@ -101,27 +113,19 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
                 <div className="flex-1 overflow-y-auto p-6 no-scrollbar pb-32">
 
                     {/* ZONE 1: ACTION TICKET (Integrated) */}
-                    {urgentEvent && isInvested && (
-                        <button
-                            onClick={() => handleEventClick(urgentEvent)}
-                            className="w-full mb-6 bg-gradient-to-r from-zinc-800 to-zinc-900 border border-white/10 rounded-2xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group active:scale-[0.98] transition-all"
-                        >
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="relative flex items-center justify-center w-3 h-3">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-app-positive opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-app-positive"></span>
-                                </div>
-                                <div className="text-left">
-                                    <div className="text-[10px] font-bold text-app-positive uppercase tracking-wider mb-0.5">Action Required</div>
-                                    <div className="text-sm font-bold text-white">{urgentEvent.title}</div>
-                                </div>
-                            </div>
-                            <div className="flex items-center text-xs font-bold text-zinc-400 group-hover:text-white transition-colors">
-                                대응하기 <ChevronDown className="-rotate-90 ml-1" size={16} />
-                            </div>
-                            {/* Background Decor */}
-                            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-app-positive/5 to-transparent pointer-events-none" />
-                        </button>
+                    {isInvested && stock.events.filter(e => e.status !== 'Completed').length > 0 && (
+                        <div className="mb-6 space-y-3">
+                            {stock.events
+                                .filter(e => e.status !== 'Completed')
+                                .map(event => (
+                                    <EventTicket
+                                        key={event.id}
+                                        event={event}
+                                        onClick={() => handleEventClick(event)}
+                                    />
+                                ))
+                            }
+                        </div>
                     )}
 
                     {/* ZONE 2: CONTEXT ZONE (Chart) */}
@@ -266,6 +270,38 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* D. Event Journal (History) */}
+                                    <div className="mt-8 pt-6 border-t border-white/5">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+                                            <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Event Journal</span>
+                                        </div>
+
+                                        {stock.events.filter(e => e.status === 'Completed').length > 0 ? (
+                                            <div className="space-y-3">
+                                                {stock.events.filter(e => e.status === 'Completed').map(event => (
+                                                    <div key={event.id} className="bg-zinc-800/50 rounded-xl p-4 border border-white/5">
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <span className="text-xs text-zinc-500 font-medium">{event.date}</span>
+                                                            <span className={`text-xs font-bold px-2 py-0.5 rounded uppercase
+                                                                ${event.myActionHistory?.decision === 'buy' ? 'bg-red-500/20 text-red-400' :
+                                                                    event.myActionHistory?.decision === 'sell' ? 'bg-blue-500/20 text-blue-400' :
+                                                                        'bg-zinc-600/20 text-zinc-400'}`}>
+                                                                {event.myActionHistory?.decision}
+                                                            </span>
+                                                        </div>
+                                                        <h4 className="text-sm font-bold text-white mb-1">{event.title}</h4>
+                                                        <p className="text-xs text-zinc-400 line-clamp-2">
+                                                            {event.scenarios.find(s => s.action === event.myActionHistory?.decision)?.rationale}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-zinc-600 italic">아직 기록된 이벤트 대응 내역이 없습니다.</p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -352,8 +388,9 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
             {showEventMode && activeEvent && (
                 <ImmersiveEventMode
                     event={activeEvent}
-                    stock={stock}
+                    relatedWatchpoint={stock.watchpoints.find(w => w.id === activeEvent.relatedWatchpointId)}
                     onClose={() => setShowEventMode(false)}
+                    onComplete={handleEventComplete}
                 />
             )}
 

@@ -80,6 +80,44 @@ export const ALL_STOCKS: SearchResultSample[] = [
         ]
       }
     ],
+    events: [
+      {
+        id: 'evt-jyp-1',
+        type: 'Issue',
+        status: 'Active',
+        title: 'VCHA 글로벌 데뷔 지표 발표',
+        date: 'Today',
+        impact: 'High',
+        relatedWatchpointId: 2,
+        factCheck: {
+          status: 'Fail',
+          actualValue: '스포티파이 진입 실패',
+          description: '기대했던 스포티파이 글로벌 차트 진입에 실패했습니다.'
+        },
+        marketReaction: {
+          priceChange: '-4.5%',
+          volumeChange: '300% (Explosive Selling)',
+          comment: '실망 매물이 쏟아지며 주가가 급락하고 있습니다.'
+        },
+        analysis: {
+          cause: '초기 음원 성과가 시장의 높은 기대치에 미치지 못했습니다.',
+          implication: '단기적인 투자 심리는 악화되었으나, 시스템의 문제는 아닙니다.'
+        },
+        pros: [
+          '유튜브 조회수는 견조하게 상승 중 (팬덤 형성 초기 단계)',
+          '현지화 시스템 자체의 결함은 발견되지 않음'
+        ],
+        cons: [
+          '초기 대중성 확보 실패로 마케팅 비용 증가 우려',
+          '후속 그룹 데뷔 일정에 대한 불확실성 증대'
+        ],
+        scenarios: [
+          { label: '저가 매수 (기회)', action: 'buy', rationale: '과도한 공포입니다. 장기 방향성은 유효합니다.' },
+          { label: '관망 (지켜보기)', action: 'hold', rationale: '다음 앨범 성과까지 확인이 필요합니다.' },
+          { label: '비중 축소 (리스크)', action: 'sell', rationale: '불확실성이 커졌습니다. 리스크를 관리합니다.' }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -158,6 +196,44 @@ export const ALL_STOCKS: SearchResultSample[] = [
         options: [
           { label: "대중화 성공", side: "Bull", implications: "고평가 정당화" },
           { label: "틈새시장 국한", side: "Bear", implications: "주가 하락 위험" }
+        ]
+      }
+    ],
+    events: [
+      {
+        id: 'evt-pltr-1',
+        type: 'Report',
+        status: 'Active',
+        title: 'AIP 부트캠프 전환율 보고서',
+        date: 'Yesterday',
+        impact: 'High',
+        relatedWatchpointId: 2,
+        factCheck: {
+          status: 'Pass',
+          actualValue: '전환율 40% 달성',
+          description: '무료 부트캠프 고객의 유료 전환율이 예상치를 상회했습니다.'
+        },
+        marketReaction: {
+          priceChange: '+5.2%',
+          volumeChange: 'Strong Buying',
+          comment: '기관 투자자들의 매수세가 유입되고 있습니다.'
+        },
+        analysis: {
+          cause: 'AIP(인공지능 플랫폼)의 실제 도입 효과가 입증되었습니다.',
+          implication: '민간 시장(Commercial) 확장이 가속화될 전망입니다.'
+        },
+        pros: [
+          '고객사 락인(Lock-in) 효과가 숫자로 증명됨',
+          '영업 레버리지 효과로 이익률 개선 기대'
+        ],
+        cons: [
+          '주가가 이미 선반영되어 밸류에이션 부담 가중',
+          '정부 계약 성장률은 다소 둔화됨'
+        ],
+        scenarios: [
+          { label: '추격 매수', action: 'buy', rationale: '성장성이 확인되었습니다. 더 오를 것입니다.' },
+          { label: '보유 (Hold)', action: 'hold', rationale: '좋은 뉴스지만 가격이 비쌉니다.' },
+          { label: '차익 실현', action: 'sell', rationale: '뉴스에 파는 것이 안전합니다.' }
         ]
       }
     ],
@@ -242,6 +318,39 @@ export const ALL_STOCKS: SearchResultSample[] = [
         ]
       }
     ],
+    events: [
+      {
+        id: 'evt-goog-1',
+        type: 'Issue',
+        status: 'Active',
+        title: 'Gemini 3.0 전격 공개',
+        date: 'Today',
+        impact: 'High',
+        relatedWatchpointId: 1,
+        factCheck: {
+          status: 'Pass',
+          actualValue: 'MMLU 92.5%',
+          description: 'Gemini 3.0이 GPT-5를 상회하는 벤치마크 점수를 기록했습니다.'
+        },
+        marketReaction: {
+          priceChange: '+4.2%',
+          volumeChange: '+180%',
+          comment: 'AI 주도권 탈환 기대감에 매수세가 폭발하고 있습니다.'
+        },
+        analysis: {
+          cause: 'Gemini 3.0의 압도적인 성능과 멀티모달 기능',
+          context: '검색 시장 점유율 방어 및 클라우드 성장 가속화 전망',
+          implication: 'AI 수익화 모델의 구체화 가능성 증대'
+        },
+        scenarios: [
+          { label: '강력 매수', action: 'buy', rationale: 'AI 리더십 회복, 지금이 저가 매수 기회' },
+          { label: '관망', action: 'hold', rationale: '실제 서비스 적용 및 수익화 추이 확인 필요' },
+          { label: '매도', action: 'sell', rationale: '경쟁 심화 및 비용 증가 우려 여전' }
+        ],
+        pros: ['GPT-5 대비 우수한 성능 입증', '유튜브/검색 등 자사 플랫폼 시너지 기대'],
+        cons: ['AI 모델 개발 및 운영 비용 급증', '반독점 규제 리스크 지속']
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -320,6 +429,44 @@ export const ALL_STOCKS: SearchResultSample[] = [
         options: [
           { label: "핵심 동력", side: "Bull", implications: "혁신 지속" },
           { label: "리스크", side: "Bear", implications: "오너 리스크 부각" }
+        ]
+      }
+    ],
+    events: [
+      {
+        id: 'evt-tsla-1',
+        type: 'Issue',
+        status: 'Active',
+        title: 'NHTSA 로보택시 안전성 조사 확대',
+        date: 'Today',
+        impact: 'High',
+        relatedWatchpointId: 2,
+        factCheck: {
+          status: 'Fail',
+          actualValue: '조사 대상 확대',
+          description: '규제 당국이 FSD 안전성에 대해 강도 높은 조사를 예고했습니다.'
+        },
+        marketReaction: {
+          priceChange: '-3.8%',
+          volumeChange: 'Panic Selling',
+          comment: '규제 리스크 부각으로 실망 매물이 나오고 있습니다.'
+        },
+        analysis: {
+          cause: '최근 발생한 FSD 관련 사고가 트리거가 되었습니다.',
+          implication: '로보택시 상용화 시점이 지연될 수 있다는 우려가 커졌습니다.'
+        },
+        pros: [
+          '데이터 축적량은 여전히 압도적임',
+          '규제는 결국 넘어야 할 산이며, 기술적 진보는 계속됨'
+        ],
+        cons: [
+          '상용화 지연 시 밸류에이션(PER) 유지 어려움',
+          '경쟁사(Waymo 등)에게 추격의 시간 허용'
+        ],
+        scenarios: [
+          { label: '저가 매수', action: 'buy', rationale: '규제 노이즈는 매수 기회입니다.' },
+          { label: '관망', action: 'hold', rationale: '조사 결과를 지켜봐야 합니다.' },
+          { label: '손절', action: 'sell', rationale: '로보택시가 없으면 주가는 너무 비쌉니다.' }
         ]
       }
     ],
@@ -404,6 +551,44 @@ export const ALL_STOCKS: SearchResultSample[] = [
         ]
       }
     ],
+    events: [
+      {
+        id: 'evt-nvda-1',
+        type: 'Issue',
+        status: 'Active',
+        title: 'Blackwell 칩 출시 지연 루머',
+        date: 'Today',
+        impact: 'High',
+        relatedWatchpointId: 2,
+        factCheck: {
+          status: 'Fail',
+          actualValue: '3개월 지연 가능성',
+          description: '설계 결함으로 인해 차세대 칩 출시가 늦어질 수 있다는 보도입니다.'
+        },
+        marketReaction: {
+          priceChange: '-6.2%',
+          volumeChange: 'Massive Selling',
+          comment: 'AI 거품론과 맞물려 투매가 나오고 있습니다.'
+        },
+        analysis: {
+          cause: '패키징 과정에서의 발열 문제가 원인으로 지목됩니다.',
+          implication: '단기 실적 공백 우려가 있으나, 수요 자체가 사라진 것은 아닙니다.'
+        },
+        pros: [
+          '수요는 여전히 공급을 초과하는 상태 (대기 수요 누적)',
+          '경쟁사(AMD)가 이 틈을 타기에는 아직 역부족'
+        ],
+        cons: [
+          '빅테크들의 AI 투자 심리 위축 가능성',
+          '주가 고점 논란에 기름을 붓는 격'
+        ],
+        scenarios: [
+          { label: '저점 매수', action: 'buy', rationale: '기술적 이슈일 뿐, 펀더멘털은 견고합니다.' },
+          { label: '관망', action: 'hold', rationale: '지연이 사실인지 확인이 필요합니다.' },
+          { label: '비중 축소', action: 'sell', rationale: '모멘텀이 꺾였습니다. 일단 피합니다.' }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -482,6 +667,43 @@ export const ALL_STOCKS: SearchResultSample[] = [
         options: [
           { label: "약(방어)", side: "Bull", implications: "해자 유지" },
           { label: "독(훼손)", side: "Bear", implications: "수익 모델 타격" }
+        ]
+      }
+    ],
+    events: [
+      {
+        id: 'evt-aapl-1',
+        type: 'Product Launch',
+        status: 'Upcoming',
+        title: 'WWDC AI 기능 공개',
+        date: 'D-14',
+        impact: 'High',
+        relatedWatchpointId: 1,
+        factCheck: {
+          status: 'Pending',
+          actualValue: '확인 대기 중',
+          description: '애플 인텔리전스의 구체적인 기능과 시리(Siri)의 업그레이드 수준이 공개될 예정입니다.'
+        },
+        marketReaction: {
+          priceChange: '+0.8%',
+          volumeChange: 'Steady',
+          comment: '기대감과 우려가 공존하며 관망세가 짙습니다.'
+        },
+        analysis: {
+          cause: '경쟁사 대비 늦은 AI 도입에 대한 시장의 의구심을 해소해야 합니다.',
+          implication: '온디바이스 AI의 표준을 제시할 수 있을지가 관전 포인트입니다.'
+        },
+        pros: [
+          '강력한 하드웨어 생태계를 기반으로 한 빠른 보급',
+          '개인정보 보호를 중시하는 소비자들에게 어필'
+        ],
+        cons: [
+          '오픈AI/구글 대비 자체 모델 성능 부족 우려',
+          '중국 시장에서의 AI 기능 탑재 불확실성'
+        ],
+        scenarios: [
+          { label: '선취매', action: 'buy', rationale: '애플은 결국 해냅니다. 저점 매수 기회입니다.' },
+          { label: '관망', action: 'hold', rationale: '실제 기능 시연을 보고 판단해도 늦지 않습니다.' }
         ]
       }
     ],
@@ -566,6 +788,44 @@ export const ALL_STOCKS: SearchResultSample[] = [
         ]
       }
     ],
+    events: [
+      {
+        id: 'evt-005930-1',
+        type: 'Issue',
+        status: 'Active',
+        title: 'HBM3E 엔비디아 퀄 테스트 통과 임박설',
+        date: 'Today',
+        impact: 'High',
+        relatedWatchpointId: 1,
+        factCheck: {
+          status: 'Pending',
+          actualValue: '최종 단계 진입',
+          description: '엔비디아의 품질 테스트를 통과하기 직전이라는 루머가 돌고 있습니다.'
+        },
+        marketReaction: {
+          priceChange: '+3.5%',
+          volumeChange: 'High Volume',
+          comment: '외국인 매수세가 강하게 유입되며 기대감을 반영하고 있습니다.'
+        },
+        analysis: {
+          cause: '발열 및 전력 소모 문제가 해결되었다는 소식이 전해졌습니다.',
+          implication: '납품 성공 시 SK하이닉스와의 밸류에이션 격차 축소가 예상됩니다.'
+        },
+        pros: [
+          'HBM 공급 부족 해소의 유일한 대안은 삼성전자',
+          '파운드리 턴어라운드와 맞물려 실적 퀀텀 점프 가능'
+        ],
+        cons: [
+          '아직 확정된 것은 아님 (희망 고문 가능성)',
+          '수율이 낮아 초기 이익 기여도는 낮을 수 있음'
+        ],
+        scenarios: [
+          { label: '적극 매수', action: 'buy', rationale: '지금이 가장 쌀 때입니다. 퀄 통과 뉴스가 나오면 늦습니다.' },
+          { label: '분할 매수', action: 'buy', rationale: '확실한 뉴스가 나올 때까지 조금씩 모아갑니다.' },
+          { label: '관망', action: 'hold', rationale: '과거에도 루머에 속았습니다. 오피셜을 기다립니다.' }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -644,6 +904,43 @@ export const ALL_STOCKS: SearchResultSample[] = [
         options: [
           { label: "감당 가능", side: "Bull", implications: "선순환 구조" },
           { label: "재무 부담", side: "Bear", implications: "유상증자 등 우려" }
+        ]
+      }
+    ],
+    events: [
+      {
+        id: 'evt-000660-1',
+        type: 'Product Launch',
+        status: 'Upcoming',
+        title: '차세대 HBM4 로드맵 발표',
+        date: 'D-3',
+        impact: 'Medium',
+        relatedWatchpointId: 1,
+        factCheck: {
+          status: 'Pending',
+          actualValue: '발표 대기',
+          description: 'TSMC와의 협력을 통한 HBM4 개발 계획을 구체화할 예정입니다.'
+        },
+        marketReaction: {
+          priceChange: '+1.5%',
+          volumeChange: 'Steady',
+          comment: '기술 리더십 유지에 대한 기대감이 주가에 반영되고 있습니다.'
+        },
+        analysis: {
+          cause: '삼성전자의 추격을 뿌리치기 위해 기술 격차를 더 벌리려는 전략입니다.',
+          implication: 'HBM4에서도 주도권을 잡는다면 독주 체제는 당분간 지속될 것입니다.'
+        },
+        pros: [
+          'TSMC와의 동맹 강화로 패키징 기술 우위 지속',
+          '고객 맞춤형 HBM 시장 선점'
+        ],
+        cons: [
+          '기술 난이도 증가로 인한 개발 지연 리스크',
+          '경쟁사들의 연합 전선 구축'
+        ],
+        scenarios: [
+          { label: '보유 (Hold)', action: 'hold', rationale: '1등 기업은 계속 가져갑니다.' },
+          { label: '추가 매수', action: 'buy', rationale: '기술 격차 확인 시 비중을 늘립니다.' }
         ]
       }
     ],
@@ -728,6 +1025,44 @@ export const ALL_STOCKS: SearchResultSample[] = [
         ]
       }
     ],
+    events: [
+      {
+        id: 'evt-amzn-1',
+        type: 'Report',
+        status: 'Active',
+        title: 'AWS AI 인프라 투자 대폭 확대',
+        date: 'Today',
+        impact: 'High',
+        relatedWatchpointId: 1,
+        factCheck: {
+          status: 'Pass',
+          actualValue: 'CapEx 50% 증액',
+          description: 'AI 데이터센터 구축을 위해 자본 지출을 대폭 늘리겠다고 발표했습니다.'
+        },
+        marketReaction: {
+          priceChange: '-2.1%',
+          volumeChange: 'Selling Pressure',
+          comment: '단기 이익률 훼손 우려로 매물이 출회되고 있습니다.'
+        },
+        analysis: {
+          cause: 'MS, 구글과의 AI 클라우드 경쟁에서 밀리지 않기 위한 승부수입니다.',
+          implication: '단기적으로는 비용 부담이 크지만, 장기 성장을 위한 필수 투자입니다.'
+        },
+        pros: [
+          '압도적인 클라우드 점유율을 바탕으로 AI 수익화 가속',
+          '자체 칩 도입으로 장기적인 비용 효율화 가능'
+        ],
+        cons: [
+          '이익률 가이던스 하향 조정 가능성',
+          '경기 침체 시 과잉 투자 리스크'
+        ],
+        scenarios: [
+          { label: '저가 매수', action: 'buy', rationale: '미래를 위한 투자는 호재입니다. 조정 시 매수합니다.' },
+          { label: '관망', action: 'hold', rationale: '이익률이 얼마나 훼손될지 확인이 필요합니다.' },
+          { label: '비중 축소', action: 'sell', rationale: '당분간 주가 상승 여력이 제한적입니다.' }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   },
   {
@@ -809,6 +1144,44 @@ export const ALL_STOCKS: SearchResultSample[] = [
         ]
       }
     ],
+    events: [
+      {
+        id: 'evt-amd-1',
+        type: 'Issue',
+        status: 'Active',
+        title: 'MI300 벤치마크 성능 유출',
+        date: 'Yesterday',
+        impact: 'High',
+        relatedWatchpointId: 1,
+        factCheck: {
+          status: 'Pass',
+          actualValue: 'H100 대비 90% 성능',
+          description: '유출된 벤치마크 결과, 엔비디아 주력 칩 대비 가성비가 뛰어난 것으로 확인되었습니다.'
+        },
+        marketReaction: {
+          priceChange: '+4.8%',
+          volumeChange: 'Strong Buying',
+          comment: '예상보다 뛰어난 성능에 저가 매수세가 몰리고 있습니다.'
+        },
+        analysis: {
+          cause: '소프트웨어 최적화가 빠르게 진행되면서 하드웨어 성능을 제대로 끌어내기 시작했습니다.',
+          implication: '엔비디아의 독점 체제에 균열을 낼 수 있는 강력한 대안임이 증명되었습니다.'
+        },
+        pros: [
+          '가격 대비 성능(가성비) 우위 확인',
+          '메타, MS 등 주요 고객사들의 채택 확대 기대'
+        ],
+        cons: [
+          '여전히 부족한 소프트웨어 생태계 (CUDA 대비)',
+          '엔비디아의 차세대 칩(Blackwell) 출시 임박'
+        ],
+        scenarios: [
+          { label: '추격 매수', action: 'buy', rationale: '2등 전략이 통하고 있습니다. 상승 여력이 큽니다.' },
+          { label: '보유 (Hold)', action: 'hold', rationale: '실제 매출로 이어지는지 확인해야 합니다.' },
+          { label: '차익 실현', action: 'sell', rationale: '단기 급등에 따른 차익 실현 매물을 주의해야 합니다.' }
+        ]
+      }
+    ],
     availableLogicBlocks: []
   }
 ];
@@ -833,7 +1206,10 @@ export const getInitialData = () => {
       totalAssetValue: 0,
       totalProfitValue: 0,
       totalProfitRate: 0,
-      holdings: { domestic: [], overseas: [] }
+      holdings: {
+        domestic: [],
+        overseas: []
+      }
     },
     marketWeather: {
       status: 'Sunny',

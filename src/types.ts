@@ -116,6 +116,7 @@ export interface EventCheckpoint {
 export interface EventScenario {
   label: string;
   action: 'buy' | 'hold' | 'sell';
+  rationale: string;
 }
 
 export interface EventActionHistory {
@@ -130,7 +131,12 @@ export interface Event {
   date: string;
   type: string;
   status: 'Upcoming' | 'Active' | 'Completed';
-  checkpoints: EventCheckpoint[];
+  relatedWatchpointId?: number;
+  factCheck?: {
+    status: 'Pass' | 'Fail' | 'Pending';
+    actualValue: string;
+    description: string;
+  };
   marketReaction: {
     priceChange: string;
     volumeChange: string;
@@ -138,8 +144,11 @@ export interface Event {
   };
   analysis: {
     cause: string;
-    context: string;
+    context?: string;
+    implication: string;
   };
+  pros: string[];
+  cons: string[];
   scenarios: EventScenario[];
   myActionHistory?: EventActionHistory;
   impact?: 'High' | 'Medium' | 'Low';
@@ -204,7 +213,7 @@ export interface SearchResultSample {
   chartContext: string;
   narrative: NarrativeProfile;
   watchpoints: Watchpoint[];
-  events?: Event[];
+  events?: Event[]; // Added events array
   availableLogicBlocks: LogicBlock[];
 }
 
