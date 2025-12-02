@@ -1,25 +1,8 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useStore } from '../contexts/StoreContext';
-import { TrendingUp, TrendingDown, Info, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { getBezierPath } from '../utils/chartUtils';
-
-const MacroCard: React.FC<{ title: string; value: string; trend: 'up' | 'down' | 'neutral'; comment: string }> = ({ title, value, trend, comment }) => (
-  <div className="bg-[#1E1E1E] p-4 rounded-2xl border border-white/5 flex flex-col justify-between">
-    <div className="flex justify-between items-start mb-2">
-      <span className="text-zinc-500 text-xs font-bold uppercase tracking-wider">{title}</span>
-      {trend === 'up' && <ArrowUpRight size={16} className="text-app-positive" />}
-      {trend === 'down' && <ArrowDownRight size={16} className="text-blue-400" />}
-      {trend === 'neutral' && <Minus size={16} className="text-zinc-500" />}
-    </div>
-    <div className="mb-2">
-        <span className="text-lg font-bold text-white">{value}</span>
-    </div>
-    <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-      {comment}
-    </p>
-  </div>
-);
 
 const MarketIndexChart: React.FC = () => {
   const { data } = useStore();
@@ -213,43 +196,6 @@ const MarketIndexChart: React.FC = () => {
             </div>
         </div>
       </div>
-
-      <section className="animate-in slide-in-from-bottom-4 duration-500">
-         <div className="flex items-center justify-between mb-4 px-1">
-            <h3 className="text-lg font-bold text-white flex items-center">
-                <Info size={18} className="text-app-accent mr-2" />
-                매크로 브리핑
-            </h3>
-            <div className="flex bg-white/5 rounded-lg p-0.5">
-                 {['1주', '1달', '3달'].map((t, i) => (
-                     <span key={t} className={`px-2.5 py-1 text-[10px] font-bold rounded-md ${i===1 ? 'bg-zinc-700 text-white' : 'text-zinc-500'}`}>{t}</span>
-                 ))}
-            </div>
-         </div>
-         
-         <div className="grid grid-cols-2 gap-3">
-             <MacroCard 
-                title="금리 (Fed)" 
-                value="5.50%" 
-                trend="neutral" 
-                comment="연내 인하 기대감이 후퇴하며 동결 기조가 유지되고 있습니다." 
-             />
-             <MacroCard 
-                title="CPI (물가)" 
-                value="3.4%" 
-                trend="up" 
-                comment="예상치를 상회하는 물가 지수로 인해 인플레이션 우려가 재점화되었습니다." 
-             />
-             <div className="col-span-2">
-                 <MacroCard 
-                    title="고용 (Non-Farm)" 
-                    value="+303K" 
-                    trend="up" 
-                    comment="노동 시장이 여전히 뜨겁습니다. 이는 연준의 금리 인하 명분을 약화시키는 요인으로 작용하고 있습니다." 
-                 />
-             </div>
-         </div>
-      </section>
 
     </div>
   );

@@ -44,12 +44,19 @@ export interface SummaryHighlight {
 
 // --- NEW CORE: NARRATIVE & LOGIC ---
 export interface NarrativeProfile {
-  summary: string;
-  whyNow: string;
-  floor: string;
-  upside: string;
-  debate: string[];
-  theBet: string;
+  question: string;
+  description: {
+    why_important: {
+      summary: string;
+      content: string;
+    };
+    current_situation: {
+      summary: string;
+      content: string;
+    };
+  };
+  tags: string[];
+  answer_choices: string[];
 }
 
 export interface WatchpointOption {

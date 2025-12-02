@@ -192,7 +192,7 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
                     <div className="mb-8 relative">
                         <Quote size={40} className="absolute -top-4 -left-2 text-zinc-700/50" />
                         <h3 className="relative z-10 text-xl font-black text-white leading-tight italic">
-                            "{stock.narrative?.summary || '투자 가설을 수립해주세요.'}"
+                            "{stock.narrative?.question || '투자 가설을 수립해주세요.'}"
                         </h3>
                     </div>
 

@@ -14,6 +14,19 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
   const { data } = useStore();
   const { user, myThesis } = data;
 
+  // Sort myThesis: urgent items first, then by id
+  const sortedThesis = [...myThesis].sort((a, b) => {
+    const aIsUrgent = a.events.some(e => e.status === 'Upcoming' || e.impact === 'High');
+    const bIsUrgent = b.events.some(e => e.status === 'Upcoming' || e.impact === 'High');
+
+    // Urgent items come first
+    if (aIsUrgent && !bIsUrgent) return -1;
+    if (!aIsUrgent && bIsUrgent) return 1;
+
+    // Otherwise maintain original order (by id)
+    return a.id - b.id;
+  });
+
   const getLogicIcon = (iconName?: string) => {
     const size = 18;
     switch (iconName) {
@@ -39,7 +52,7 @@ const MyThesisTab: React.FC<MyThesisTabProps> = ({ onStockClick, onNavigate }) =
       </header>
 
       <div className="p-6 space-y-4">
-        {myThesis.map((stock) => {
+        {sortedThesis.map((stock) => {
            const isInvested = stock.status === 'Invested';
            // Check for urgency using status and optional impact if present
            const isUrgent = stock.events.some(e => e.status === 'Upcoming' || e.impact === 'High');

@@ -47,8 +47,13 @@ const syncHoldingsToThesis = (currentData: AppData): Thesis[] => {
         
         // Critical: Use rich data if available
         narrative: richData?.narrative || {
-            summary: "포트폴리오 자산",
-            whyNow: "-", floor: "-", upside: "-", debate: [], theBet: "-"
+            question: "포트폴리오 자산",
+            description: {
+                why_important: { summary: "-", content: "" },
+                current_situation: { summary: "-", content: "" }
+            },
+            tags: [],
+            answer_choices: ["긍정", "부정"]
         },
         watchpoints: richData?.watchpoints || [],
         events: richData?.events || [], // Copy events!
