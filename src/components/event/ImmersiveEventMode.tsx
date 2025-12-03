@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, XCircle, AlertTriangle, ArrowRight, TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { X, CheckCircle2, XCircle, AlertTriangle, ArrowRight, TrendingUp, TrendingDown, Activity, ChevronDown } from 'lucide-react';
 import { Event, Watchpoint } from '../../types';
 import ReactMarkdown from 'react-markdown';
 
@@ -19,6 +19,17 @@ export const ImmersiveEventMode: React.FC<ImmersiveEventModeProps> = ({
 }) => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [activeWatchpointId, setActiveWatchpointId] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Keep active watchpoint in sync if props change
+    if (!watchpoints.length) {
+      setActiveWatchpointId(null);
+      return;
+    }
+    const stillExists = watchpoints.some(wp => wp.id === activeWatchpointId);
+    if (!stillExists) setActiveWatchpointId(null);
+  }, [watchpoints, activeWatchpointId]);
 
   // Step 1: Fact Check
   const renderStep1 = () => (
@@ -176,7 +187,7 @@ export const ImmersiveEventMode: React.FC<ImmersiveEventModeProps> = ({
             <h2 className="text-2xl font-bold text-white">워치포인트 영향 분석</h2>
           </motion.div>
 
-          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2">
             {watchpoints.map((wp, idx) => {
               const impactData = impacts.find(i => i.watchpointId === wp.id);
               const impactType = impactData?.impact || 'None';
@@ -201,32 +212,44 @@ export const ImmersiveEventMode: React.FC<ImmersiveEventModeProps> = ({
                 statusColor = 'text-red-400';
               }
 
+              const isActive = activeWatchpointId === wp.id;
+
               return (
                 <motion.div
                   key={wp.id}
-                  initial={{ x: -20, opacity: 0 }}
+                  initial={{ x: -12, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={`rounded-2xl p-5 border ${borderColor} ${bgColor}`}
+                  transition={{ delay: idx * 0.05 }}
+                  className={`rounded-2xl border ${borderColor} ${bgColor} transition-all ${isActive ? 'shadow-[0_0_30px_rgba(99,102,241,0.15)] border-white/20' : ''}`}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-zinc-300 text-sm font-bold line-clamp-1 flex-1 mr-4">
-                      {wp.question}
-                    </h3>
-                    <div className={`flex items-center gap-2 text-xs font-bold ${statusColor} shrink-0`}>
-                      {icon}
-                      <span>{statusText}</span>
+                  <button
+                    onClick={() => setActiveWatchpointId(isActive ? null : wp.id)}
+                    className="w-full flex items-center gap-3 justify-between px-4 py-3"
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive ? 'bg-white/10' : 'bg-black/40'}`}>
+                        {icon}
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-bold text-white line-clamp-2">{wp.question}</span>
+                        <span className={`text-xs font-bold ${statusColor}`}>{statusText}</span>
+                      </div>
                     </div>
-                  </div>
+                    <ChevronDown size={18} className={`text-zinc-500 transition-transform ${isActive ? 'rotate-180' : ''}`} />
+                  </button>
 
-                  {impactType !== 'None' ? (
-                    <p className="text-white text-base leading-relaxed font-medium">
-                      {impactData?.description}
-                    </p>
-                  ) : (
-                    <p className="text-zinc-600 text-sm">
-                      이번 사건은 이 워치포인트에 직접적인 영향을 주지 않았습니다.
-                    </p>
+                  {isActive && (
+                    <div className="px-4 pb-4 pt-2 border-t border-white/5">
+                      {impactType !== 'None' ? (
+                        <p className="text-white text-base leading-relaxed font-medium">
+                          {impactData?.description || '세부 설명이 없습니다.'}
+                        </p>
+                      ) : (
+                        <p className="text-zinc-500 text-sm">
+                          이번 사건은 이 워치포인트에 직접적인 영향을 주지 않았습니다.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </motion.div>
               );

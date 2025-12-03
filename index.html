@@ -26,6 +26,19 @@
       }
     </script>
     <style>
+      /* Global typography tweaks for better mobile readability */
+      :root {
+        font-size: 17px;
+      }
+      @media (max-width: 480px) {
+        :root {
+          font-size: 18px;
+        }
+      }
+      /* Upscale tiny utility sizes so badges/legends stay legible on phones */
+      .text-\[10px\] { font-size: 0.75rem !important; }
+      .text-\[11px\] { font-size: 0.8rem !important; }
+
       body { background-color: #121212; color: #FFFFFF; -webkit-font-smoothing: antialiased; }
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

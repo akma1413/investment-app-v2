@@ -114,7 +114,7 @@ const NarrativeIntro: React.FC<NarrativeIntroProps> = ({ stock, onComplete, onCl
               {/* Bulls */}
               <div className="bg-[#1E1E1E] rounded-2xl p-5 border-l-4 border-emerald-500">
                 <h4 className="text-emerald-400 font-bold mb-3 flex items-center gap-2">
-                  <TrendingUp size={18} /> 긍정적 시그널 (Bullish)
+                  <TrendingUp size={18} /> 상승 기대 (가격이 오를 것 같아요)
                 </h4>
                 <div className="space-y-3">
                   {narrative.steps.debate.bulls.map((bull, idx) => (
@@ -134,7 +134,7 @@ const NarrativeIntro: React.FC<NarrativeIntroProps> = ({ stock, onComplete, onCl
               {/* Bears */}
               <div className="bg-[#1E1E1E] rounded-2xl p-5 border-l-4 border-rose-500">
                 <h4 className="text-rose-400 font-bold mb-3 flex items-center gap-2">
-                  <ShieldCheck size={18} /> 부정적 시그널 (Bearish)
+                  <ShieldCheck size={18} /> 하락 경계 (가격이 내려갈 것 같아요)
                 </h4>
                 <div className="space-y-3">
                   {narrative.steps.debate.bears.map((bear, idx) => (
