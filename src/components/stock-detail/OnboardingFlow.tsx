@@ -60,22 +60,27 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     const newThesis = addToMyThesis(selectedStock, [], status);
     setFinalThesis(newThesis);
 
-    if (decision === 'Buy') {
-      setStep('alert-setup');
-    } else {
-      setStep('permission');
-    }
+    setStep('watchpoint');
   };
 
   const handleWatchpointComplete = (selections: { watchpointId: number, side: 'Bull' | 'Bear' }[]) => {
-    // In a real app, we would update the thesis with these selections here.
-    // For now, we just move to permission.
-    console.log('Watchpoints selected:', selections);
-    setStep('permission');
+    if (!selectedStock || !finalThesis) return;
+
+    // Update the thesis with the original watchpoints (assuming we enable all if the flow is completed)
+    // We could also store the specific Bull/Bear selections if the data model supported it, 
+    // but for now ensuring the watchpoints are present is the priority.
+    const updatedThesis = addToMyThesis(
+      selectedStock,
+      selectedStock.watchpoints, // Save the actual watchpoints
+      finalThesis.status // Keep existing status
+    );
+
+    setFinalThesis(updatedThesis);
+    handleFinalComplete(updatedThesis);
   };
 
-  const handleFinalComplete = () => {
-    onComplete(finalThesis);
+  const handleFinalComplete = (thesis?: Thesis) => {
+    onComplete(thesis || finalThesis);
   };
 
   return (
@@ -132,7 +137,7 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
                   {[
                     { name: 'JYP Ent.', ticker: '035900', price: '58,200원', profit: '-1.3%', isPlus: false },
                     { name: '팔란티어', ticker: 'PLTR', price: '34,150원', profit: '+16.0%', isPlus: true },
-                    { name: '구글', ticker: 'GOOGL', price: '245,800원', profit: '+12.2%', isPlus: true },
+                    { name: '엔비디아', ticker: 'NVDA', price: '1,280,000원', profit: '+85.0%', isPlus: true },
                   ].map((item, i) => (
                     <div key={i} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
                       <div className="flex items-center gap-3">
@@ -234,58 +239,17 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {step === 'alert-setup' && (
-        <div className="w-full h-full flex flex-col px-8 pt-24 pb-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-24 h-24 bg-indigo-500/10 rounded-full flex items-center justify-center mb-8">
-              <Bell size={48} className="text-indigo-500" />
-            </div>
-            <h2 className="text-3xl font-bold mb-4 leading-tight">
-              단순한 가격 변동 말고,<br />
-              <span className="text-indigo-500">{name}님의 판단이 필요할 때</span><br />
-              알려드릴게요.
-            </h2>
-            <p className="text-zinc-400 leading-relaxed">
-              설정하신 시나리오가 현실이 될 때<br />
-              가장 먼저 소식을 전해드립니다.
-            </p>
-          </div>
-          <div className="space-y-3">
-            <button
-              onClick={() => setStep('watchpoint')}
-              className="w-full h-14 bg-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all"
-            >
-              핵심 포인트 잡아두기
-            </button>
-            <button
-              onClick={() => setStep('permission')}
-              className="w-full h-14 bg-transparent text-zinc-500 font-medium rounded-2xl hover:bg-white/5 transition-colors"
-            >
-              일단 넘어가기
-            </button>
-          </div>
-        </div>
-      )}
-
       {step === 'watchpoint' && selectedStock && (
         <div className="absolute inset-0 z-[220] bg-[#121212]">
           <WatchpointBuilder
             stock={selectedStock}
-            onClose={() => setStep('permission')}
+            onClose={() => handleFinalComplete()}
             onComplete={(selections) => handleWatchpointComplete(selections)}
           />
         </div>
       )}
 
-      {step === 'permission' && (
-        <div className="w-full h-full flex flex-col px-8 pt-24 pb-12 text-center">
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <Bell size={48} className="text-indigo-500 mb-6" />
-            <h2 className="text-3xl font-bold">{TEXT.ONBOARDING.PERMISSION_TITLE}</h2>
-          </div>
-          <button onClick={handleFinalComplete} className="w-full h-14 bg-indigo-500 text-white font-bold rounded-2xl">완료하고 시작하기</button>
-        </div>
-      )}
+
     </div>
   );
 };

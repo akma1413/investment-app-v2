@@ -39,7 +39,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ notification, onC
                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${notification.type === 'alert' ? 'bg-red-500' : 'bg-blue-500'}`} />
 
                 {/* Icon */}
-                <div className={`p-2.5 rounded-full shrink-0 ${notification.type === 'alert' ? 'bg-red-500/10 text-red-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                <div className={`p-2.5 rounded-full shrink-0 ${notification.type === 'alert' ? 'bg-red-500/10 text-red-500 animate-pulse' : 'bg-blue-500/10 text-blue-500'}`}>
                     {notification.type === 'alert' ? <AlertTriangle size={20} /> : <TrendingUp size={20} />}
                 </div>
 

@@ -78,11 +78,23 @@ export interface WatchpointOption {
   implications?: string;
 }
 
+export interface ReferenceItem {
+  text: string;
+  url: string;
+}
+
+export interface WatchpointReferences {
+  summaries: ReferenceItem[];
+  pros: ReferenceItem;
+  cons: ReferenceItem;
+}
+
 export interface Watchpoint {
   id: number;
   title: string; // e.g. "[기존 사업]", "[신규 사업]"
   question: string;
   context: string;
+  references?: WatchpointReferences;
   options: WatchpointOption[];
 }
 
@@ -125,13 +137,20 @@ export interface EventActionHistory {
   pnl?: string;
 }
 
+export interface EventImpact {
+  watchpointId: number;
+  impact: 'Positive' | 'Negative' | 'None';
+  description?: string;
+}
+
 export interface Event {
   id: string;
   title: string;
   date: string;
   type: string;
   status: 'Upcoming' | 'Active' | 'Completed';
-  relatedWatchpointId?: number;
+  relatedWatchpointId?: number; // Deprecated but kept for backward compatibility if needed
+  impactAnalysis?: EventImpact[]; // New field for multi-watchpoint impact
   factCheck?: {
     status: 'Pass' | 'Fail' | 'Pending';
     actualValue: string;
@@ -147,8 +166,8 @@ export interface Event {
     context?: string;
     implication: string;
   };
-  pros: string[];
-  cons: string[];
+  pros: string[]; // Deprecated
+  cons: string[]; // Deprecated
   scenarios: EventScenario[];
   myActionHistory?: EventActionHistory;
   impact?: 'High' | 'Medium' | 'Low';
@@ -202,6 +221,29 @@ export interface TrendingLogic {
   subtitle: string;
   badge: string;
   theme: string;
+  etfInfo?: {
+    name: string;
+    price: string;
+    chartData: number[]; // Simple array for sparkline
+  };
+  upsideScenario?: {
+    title: string;
+    content: string;
+  };
+  analystConsensus?: {
+    target: string;
+    outlook: 'Positive' | 'Neutral' | 'Negative';
+    distribution: {
+      buy: number;
+      hold: number;
+      sell: number;
+    };
+    priceTarget?: string;
+  };
+  reasonsToWatch?: {
+    title: string;
+    content: string;
+  }[];
 }
 
 export interface SearchResultSample {
@@ -262,6 +304,6 @@ export interface StoreContextType {
   markNotificationAsRead: (id: number) => void;
   searchStocks: (query: string) => void;
   selectDiscoveryStock: (ticker: string) => void;
-  addToMyThesis: (stock: SearchResultSample, selectedWatchpointIndices: number[], investmentType: string, amount?: string) => Thesis;
+  addToMyThesis: (stock: SearchResultSample, watchpoints: Watchpoint[] | undefined, investmentType: string, amount?: string) => Thesis;
   recordEventDecision: (thesisId: number, eventId: string, decision: 'buy' | 'hold' | 'sell') => void;
 }

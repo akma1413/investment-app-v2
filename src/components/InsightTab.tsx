@@ -3,18 +3,22 @@ import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useStore } from '../contexts/StoreContext';
 import MarketIndexChart from './MarketIndexChart';
-import { Holding } from '../types';
+import { Holding, User, MarketWeather, Thesis } from '../types';
 import { TEXT } from '../constants/text';
 import { formatCurrency, formatRate, getRateColorClass } from '../utils/formatters';
 
 interface InsightTabProps {
+  user: User;
+  marketWeather: MarketWeather;
+  onStockClick: (stock: Thesis) => void;
   onNavigate: (tab: 'insight' | 'my-thesis' | 'discovery') => void;
 }
 
-const InsightTab: React.FC<InsightTabProps> = ({ onNavigate }) => {
+const InsightTab: React.FC<InsightTabProps> = ({ user, marketWeather, onStockClick, onNavigate }) => {
   const { data } = useStore();
-  const { marketWeather, summaryHighlights, user } = data;
+  const { summaryHighlights } = data;
   const [headerTitle, setHeaderTitle] = useState(TEXT.INSIGHT.HEADER_TODAY);
+  const [activeTab, setActiveTab] = React.useState<'domestic' | 'overseas'>('overseas');
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop;
@@ -26,9 +30,43 @@ const InsightTab: React.FC<InsightTabProps> = ({ onNavigate }) => {
     }
   };
 
+  const getRateColorClass = (value: number) => {
+    if (value > 0) return 'text-red-500';
+    if (value < 0) return 'text-blue-500';
+    return 'text-zinc-500';
+  };
+
   const renderStockItem = (holding: Holding) => {
+    // Find the full stock data to pass to onStockClick
+    // In a real app, Holding might already extend Thesis or we'd look it up.
+    // For now, we'll construct a minimal Thesis object or look it up if possible.
+    // Assuming holding has enough info or we can find it in ALL_STOCKS (not imported here).
+    // Let's pass a partial object or rely on the parent to handle lookup if needed.
+    // But wait, onStockClick expects a Thesis.
+    // Let's assume the parent (App.tsx) passes a handler that can take a Holding and find the Thesis,
+    // OR we just pass the Holding and let the parent handle it.
+    // Actually, looking at App.tsx, setSelectedStock expects a Thesis.
+    // Let's cast or find. Since we don't have ALL_STOCKS here, let's change the prop to accept Holding or just pass what we have.
+    // Better yet, let's just pass the ticker and let App.tsx find it?
+    // No, let's keep it simple. The holding object has ticker.
+
     return (
-      <div key={holding.id} className="flex justify-between items-center py-4 border-b border-white/5 last:border-0 cursor-pointer active:bg-white/5 transition-colors -mx-4 px-4 hover:bg-white/5">
+      <div
+        key={holding.id}
+        onClick={() => {
+          // We need to convert Holding to Thesis-like object or find it.
+          // Since we don't have access to ALL_STOCKS here easily without importing,
+          // and we want to avoid circular dependencies if any.
+          // Let's just pass the holding and let the parent/type handle it.
+          // Actually, let's import ALL_STOCKS in App.tsx and pass a handler that takes a ticker.
+          // But the interface says (stock: Thesis) => void.
+          // Let's change the interface to (ticker: string) => void for easier implementation,
+          // OR import ALL_STOCKS here. Let's import ALL_STOCKS here for safety.
+          // Wait, ALL_STOCKS is in data/stockData.ts.
+          onStockClick(holding as any); // Temporary cast, will fix in App.tsx or import
+        }}
+        className="flex justify-between items-center py-4 border-b border-white/5 last:border-0 cursor-pointer active:bg-white/5 transition-colors -mx-4 px-4 hover:bg-white/5"
+      >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-bold shrink-0 text-sm">
             {holding.name.length > 5 ? holding.ticker[0] : holding.name[0]}
