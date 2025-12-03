@@ -6,14 +6,14 @@ import ReactMarkdown from 'react-markdown';
 
 interface ImmersiveEventModeProps {
   event: Event;
-  relatedWatchpoint?: Watchpoint;
+  watchpoints: Watchpoint[];
   onClose: () => void;
   onComplete: (decision: 'buy' | 'hold' | 'sell') => void;
 }
 
 export const ImmersiveEventMode: React.FC<ImmersiveEventModeProps> = ({
   event,
-  relatedWatchpoint,
+  watchpoints,
   onClose,
   onComplete
 }) => {
@@ -33,22 +33,7 @@ export const ImmersiveEventMode: React.FC<ImmersiveEventModeProps> = ({
           <h2 className="text-2xl font-bold text-white">{event.title}</h2>
         </motion.div>
 
-        {relatedWatchpoint && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="w-full bg-zinc-900/50 border border-white/10 rounded-2xl p-6 relative overflow-hidden"
-          >
-            <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
-            <div className="text-left space-y-2">
-              <span className="text-xs text-indigo-400 font-bold">관련 관전 포인트</span>
-              <p className="text-lg text-zinc-200 font-medium leading-relaxed">
-                "{relatedWatchpoint.question}"
-              </p>
-            </div>
-          </motion.div>
-        )}
+
 
         <motion.div
           initial={{ opacity: 0, scale: 0.5 }}
@@ -173,67 +158,91 @@ export const ImmersiveEventMode: React.FC<ImmersiveEventModeProps> = ({
     </div>
   );
 
-  // Step 3: Impact Judgment (Pros vs Cons)
-  const renderStep3 = () => (
-    <div className="flex flex-col h-full p-6">
-      <div className="flex-1 flex flex-col space-y-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-2"
-        >
-          <span className="text-zinc-500 text-base font-bold tracking-widest uppercase">Step 3. 논리 점검</span>
-          <h2 className="text-2xl font-bold text-white">기존 가설이 여전히 유효한가요?</h2>
-        </motion.div>
+  // Step 3: Watchpoint Impact Analysis
+  const renderStep3 = () => {
+    // If no watchpoints provided or no impact analysis, fall back to empty or legacy view
+    // But we assume data is migrated.
+    const impacts = event.impactAnalysis || [];
 
-        <div className="grid grid-cols-1 gap-4 h-full overflow-y-auto">
+    return (
+      <div className="flex flex-col h-full p-6">
+        <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
           <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="bg-green-500/5 border border-green-500/20 rounded-2xl p-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-2 shrink-0"
           >
-            <h3 className="text-green-400 text-xl font-bold mb-4 flex items-center gap-2">
-              <TrendingUp size={20} /> 긍정적 요인 (가설 강화)
-            </h3>
-            <ul className="space-y-3">
-              {event.pros.map((pro, i) => (
-                <li key={i} className="flex items-start gap-3 text-zinc-300 text-lg leading-relaxed">
-                  <span className="text-green-500 mt-1.5">•</span>
-                  {pro}
-                </li>
-              ))}
-            </ul>
+            <span className="text-zinc-500 text-base font-bold tracking-widest uppercase">Step 3. 논리 점검</span>
+            <h2 className="text-2xl font-bold text-white">워치포인트 영향 분석</h2>
           </motion.div>
 
-          <motion.div
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="bg-red-500/5 border border-red-500/20 rounded-2xl p-5"
-          >
-            <h3 className="text-red-400 text-xl font-bold mb-4 flex items-center gap-2">
-              <TrendingDown size={20} /> 부정적 요인 (리스크)
-            </h3>
-            <ul className="space-y-3">
-              {event.cons.map((con, i) => (
-                <li key={i} className="flex items-start gap-3 text-zinc-300 text-lg leading-relaxed">
-                  <span className="text-red-500 mt-1.5">•</span>
-                  {con}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            {watchpoints.map((wp, idx) => {
+              const impactData = impacts.find(i => i.watchpointId === wp.id);
+              const impactType = impactData?.impact || 'None';
+
+              let borderColor = 'border-zinc-800';
+              let bgColor = 'bg-zinc-900/50';
+              let icon = <Activity size={20} className="text-zinc-600" />;
+              let statusText = '영향 없음';
+              let statusColor = 'text-zinc-500';
+
+              if (impactType === 'Positive') {
+                borderColor = 'border-green-500/30';
+                bgColor = 'bg-green-500/5';
+                icon = <TrendingUp size={20} className="text-green-500" />;
+                statusText = '긍정적 요인 (가설 강화)';
+                statusColor = 'text-green-400';
+              } else if (impactType === 'Negative') {
+                borderColor = 'border-red-500/30';
+                bgColor = 'bg-red-500/5';
+                icon = <TrendingDown size={20} className="text-red-500" />;
+                statusText = '부정적 요인 (리스크)';
+                statusColor = 'text-red-400';
+              }
+
+              return (
+                <motion.div
+                  key={wp.id}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className={`rounded-2xl p-5 border ${borderColor} ${bgColor}`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-zinc-300 text-sm font-bold line-clamp-1 flex-1 mr-4">
+                      {wp.question}
+                    </h3>
+                    <div className={`flex items-center gap-2 text-xs font-bold ${statusColor} shrink-0`}>
+                      {icon}
+                      <span>{statusText}</span>
+                    </div>
+                  </div>
+
+                  {impactType !== 'None' ? (
+                    <p className="text-white text-base leading-relaxed font-medium">
+                      {impactData?.description}
+                    </p>
+                  ) : (
+                    <p className="text-zinc-600 text-sm">
+                      이번 사건은 이 워치포인트에 직접적인 영향을 주지 않았습니다.
+                    </p>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <button
-        onClick={() => setStep(4)}
-        className="w-full py-4 bg-white text-black font-bold rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2 relative z-10"
-      >
-        다음: 의사결정 <ArrowRight size={18} />
-      </button>
-    </div>
-  );
+        <button
+          onClick={() => setStep(4)}
+          className="w-full py-4 bg-white text-black font-bold rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-2 relative z-10 mt-4 shrink-0"
+        >
+          다음: 의사결정 <ArrowRight size={18} />
+        </button>
+      </div>
+    );
+  };
 
   // Step 4: Decision
   const renderStep4 = () => (

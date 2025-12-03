@@ -9,9 +9,11 @@ import StockDetailModal from './components/StockDetailModal';
 import OnboardingFlow from './components/stock-detail/OnboardingFlow';
 import NotificationModal from './components/NotificationModal';
 import NarrativeIntro from './components/narrative/NarrativeIntro';
+import HypothesisBuilder from './components/HypothesisBuilder';
 import WatchpointBuilder from './components/narrative/WatchpointBuilder';
 import NotificationPopup from './components/NotificationPopup';
 import { TEXT } from './constants/text';
+import { ALL_STOCKS } from './data/stockData';
 
 type Tab = 'insight' | 'my-thesis' | 'discovery';
 
@@ -26,12 +28,13 @@ const AppContent: React.FC = () => {
   const [builderTarget, setBuilderTarget] = useState<Thesis | SearchResultSample | null>(null);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
+  const [initialEventId, setInitialEventId] = useState<string | undefined>(undefined);
 
   const unreadCount = data.notifications.filter(n => !n.isRead).length;
 
-  // Trigger Popup on Insight Tab
+  // Trigger Popup on ANY Tab
   React.useEffect(() => {
-    if (activeTab === 'insight' && isOnboardingComplete) {
+    if (isOnboardingComplete) {
       const unread = data.notifications.find(n => !n.isRead);
       if (unread) {
         // Delay slightly to simulate "live" feel
@@ -47,7 +50,7 @@ const AppContent: React.FC = () => {
     setIsOnboardingComplete(true);
     setActiveTab('my-thesis');
     if (newThesis) {
-      setTimeout(() => setSelectedStock(newThesis), 100);
+      setSelectedStock(newThesis);
     }
   };
 
@@ -57,13 +60,11 @@ const AppContent: React.FC = () => {
     else setNarrativeTarget(stock);
   };
 
-  const handleGlobalNarrativeComplete = (decision: 'Buy' | 'Watch') => {
+  const handleGlobalNarrativeComplete = (newThesis?: Thesis) => {
     if (!narrativeTarget) return;
-    const status = decision === 'Buy' ? 'Invested' : 'Watching';
-    const newThesis = addToMyThesis(narrativeTarget, [], status);
     setNarrativeTarget(null);
     setActiveTab('my-thesis');
-    setSelectedStock(newThesis);
+    if (newThesis) setSelectedStock(newThesis);
   };
 
   const handleOpenBuilder = (stock?: Thesis | SearchResultSample) => {
@@ -72,8 +73,20 @@ const AppContent: React.FC = () => {
 
   const handleNotificationClick = (notification: Notification) => {
     setIsNotificationOpen(false);
-    let targetThesis = data.myThesis.find(s => s.id === notification.stockId || s.ticker === notification.ticker);
-    if (targetThesis) { setActiveTab('my-thesis'); setSelectedStock(targetThesis); }
+    let targetThesis = data.myThesis.find(s => s.id === notification.stockId || s.ticker === notification.ticker) ||
+      ALL_STOCKS.find(s => s.ticker === notification.ticker);
+
+    if (targetThesis) {
+      // If it's not in myThesis, we might want to stay on current tab or go to discovery? 
+      // But for now, let's just open the modal. 
+      // If we want to show it as "Watching", we might need to handle that in StockDetailModal or ensure it's treated as such.
+      // StockDetailModal handles uninvested stocks fine.
+
+      setSelectedStock(targetThesis as any);
+      setNarrativeTarget(null);
+      setIsBuilderOpen(false);
+      if (notification.eventId) setInitialEventId(notification.eventId);
+    }
   };
 
   const handlePopupClick = (notification: Notification) => {
@@ -81,11 +94,14 @@ const AppContent: React.FC = () => {
     markNotificationAsRead(notification.id);
 
     // Navigate to Stock Detail
-    let targetThesis = data.myThesis.find(s => s.id === notification.stockId || s.ticker === notification.ticker);
+    let targetThesis = data.myThesis.find(s => s.id === notification.stockId || s.ticker === notification.ticker) ||
+      ALL_STOCKS.find(s => s.ticker === notification.ticker);
 
     if (targetThesis) {
-      setActiveTab('my-thesis');
-      setSelectedStock(targetThesis);
+      setSelectedStock(targetThesis as any);
+      setNarrativeTarget(null);
+      setIsBuilderOpen(false);
+      if (notification.eventId) setInitialEventId(notification.eventId);
     }
   };
 
@@ -94,8 +110,8 @@ const AppContent: React.FC = () => {
       <main className="w-full max-w-[430px] h-full bg-app-bg relative shadow-2xl flex flex-col overflow-hidden">
 
         {isOnboardingComplete && !selectedStock && !narrativeTarget && !isBuilderOpen && !isNotificationOpen && (
-          <button onClick={() => setIsNotificationOpen(true)} className="absolute top-6 right-6 z-50 p-2 bg-black/20 rounded-full border border-white/5">
-            <div className="relative"><Bell size={24} className="text-white" />{unreadCount > 0 && <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full" />}</div>
+          <button onClick={() => setIsNotificationOpen(true)} className="absolute top-6 right-6 z-50 p-3 bg-black/40 rounded-full border border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.6)] backdrop-blur-md active:scale-95 transition-all animate-pulse">
+            <div className="relative"><Bell size={28} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" />{unreadCount > 0 && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-black animate-pulse" />}</div>
           </button>
         )}
 
@@ -104,8 +120,25 @@ const AppContent: React.FC = () => {
         {isOnboardingComplete && (
           <>
             <div className="flex-1 w-full relative overflow-hidden">
-              {activeTab === 'insight' && <InsightTab onNavigate={setActiveTab} />}
-              {activeTab === 'my-thesis' && <MyThesisTab onStockClick={setSelectedStock} onNavigate={setActiveTab} />}
+              {activeTab === 'insight' && (
+                <InsightTab
+                  user={data.user}
+                  marketWeather={data.marketWeather}
+                  onStockClick={(stockOrHolding: any) => {
+                    console.log('Stock Clicked:', stockOrHolding);
+                    // Find the full thesis object from ALL_STOCKS or myThesis
+                    const target = data.myThesis.find(t => t.ticker === stockOrHolding.ticker) ||
+                      ALL_STOCKS.find(s => s.ticker === stockOrHolding.ticker);
+                    console.log('Target Found:', target);
+                    if (target) {
+                      setSelectedStock(target as any);
+                      setNarrativeTarget(null); // Reset narrative intro
+                      setIsBuilderOpen(false); // Reset watchpoint builder
+                    }
+                  }}
+                  onNavigate={setActiveTab}
+                />
+              )}      {activeTab === 'my-thesis' && <MyThesisTab onStockClick={setSelectedStock} onNavigate={setActiveTab} />}
               {activeTab === 'discovery' && <DiscoveryTab onStockClick={handleStockClickFromDiscovery} />}
             </div>
 
@@ -134,11 +167,24 @@ const AppContent: React.FC = () => {
           </>
         )}
 
-        {selectedStock && <StockDetailModal stock={selectedStock} onClose={() => setSelectedStock(null)} onAddLogic={() => handleOpenBuilder(selectedStock)} />}
+        {selectedStock && (
+          <StockDetailModal
+            stock={selectedStock}
+            onClose={() => { setSelectedStock(null); setInitialEventId(undefined); }}
+            onAddLogic={() => handleOpenBuilder(selectedStock)}
+            initialEventId={initialEventId}
+          />
+        )}
 
-        {narrativeTarget && <div className="absolute inset-0 z-[200]"><NarrativeIntro stock={narrativeTarget} onClose={() => setNarrativeTarget(null)} onComplete={handleGlobalNarrativeComplete} /></div>}
+        {narrativeTarget && <div className="absolute inset-0 z-[200]"><HypothesisBuilder stock={narrativeTarget} onClose={() => setNarrativeTarget(null)} onComplete={() => handleGlobalNarrativeComplete()} /></div>}
 
-        {isBuilderOpen && builderTarget && <div className="fixed inset-0 z-[200]"><WatchpointBuilder stock={builderTarget} onClose={() => setIsBuilderOpen(false)} onComplete={() => setIsBuilderOpen(false)} /></div>}
+        {isBuilderOpen && builderTarget && (
+          <div className="fixed inset-0 z-[200] flex justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+            <div className="w-full max-w-[430px] h-full bg-[#121212] relative shadow-2xl overflow-hidden">
+              <WatchpointBuilder stock={builderTarget} onClose={() => setIsBuilderOpen(false)} onComplete={() => setIsBuilderOpen(false)} />
+            </div>
+          </div>
+        )}
 
         {isNotificationOpen && <NotificationModal onClose={() => setIsNotificationOpen(false)} onNotificationClick={handleNotificationClick} />}
 

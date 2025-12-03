@@ -119,13 +119,26 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   };
 
-  const addToMyThesis = (stock: SearchResultSample, selectedWatchpointIndices: number[], investmentType: string, amount?: string): Thesis => {
+  const addToMyThesis = (stock: SearchResultSample, watchpoints: any[] | undefined, investmentType: string, amount?: string): Thesis => {
     // 1. Deduplication Check
     const existingThesis = data.myThesis.find(t => t.ticker === stock.ticker);
     if (existingThesis) {
-      // If simply watching -> invested upgrade
+      let updated = { ...existingThesis };
+      let hasChanges = false;
+
+      // Update Status if upgrading to Invested
       if (existingThesis.status !== 'Invested' && investmentType === 'Invested') {
-        const updated = { ...existingThesis, status: 'Invested' as const };
+        updated.status = 'Invested';
+        hasChanges = true;
+      }
+
+      // Update Watchpoints if provided (Critical for Skip logic)
+      if (watchpoints !== undefined) {
+        updated.watchpoints = watchpoints;
+        hasChanges = true;
+      }
+
+      if (hasChanges) {
         setData(prev => ({ ...prev, myThesis: prev.myThesis.map(t => t.id === existingThesis.id ? updated : t) }));
         return updated;
       }
@@ -144,7 +157,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       // Copy Core Data
       narrative: stock.narrative,
-      watchpoints: stock.watchpoints || [],
+      watchpoints: watchpoints !== undefined ? watchpoints : (stock.watchpoints || []),
       events: stock.events || [],
       companyProfile: stock.companyProfile,
 
@@ -166,20 +179,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     setData(prev => ({
       ...prev,
-      myThesis: [newThesis, ...prev.myThesis],
-      notifications: [
-        {
-          id: Date.now(),
-          type: 'info',
-          title: `${stock.name} 가설 등록 완료`,
-          desc: '성공적으로 저장되었습니다.',
-          timestamp: '방금 전',
-          isRead: false,
-          stockId: newThesis.id,
-          ticker: newThesis.ticker
-        },
-        ...prev.notifications
-      ]
+      myThesis: [newThesis, ...prev.myThesis]
     }));
     return newThesis;
   };

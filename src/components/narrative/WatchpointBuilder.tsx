@@ -7,12 +7,13 @@ interface WatchpointBuilderProps {
   stock: SearchResultSample | Thesis;
   onComplete: (selections: { watchpointId: number, side: 'Bull' | 'Bear' }[]) => void;
   onClose: () => void;
+  skipIntro?: boolean;
 }
 
-const WatchpointBuilder: React.FC<WatchpointBuilderProps> = ({ stock, onComplete, onClose }) => {
+const WatchpointBuilder: React.FC<WatchpointBuilderProps> = ({ stock, onComplete, onClose, skipIntro = false }) => {
   const watchpoints = stock.watchpoints || [];
 
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(!skipIntro);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selections, setSelections] = useState<Record<number, 'Bull' | 'Bear'>>({});
 
@@ -74,25 +75,37 @@ const WatchpointBuilder: React.FC<WatchpointBuilderProps> = ({ stock, onComplete
 
       {/* Intro Overlay */}
       {showIntro && (
-        <div className="absolute inset-0 z-50 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center px-8 text-center animate-in fade-in duration-300">
-          <div className="w-20 h-20 bg-app-accent/10 rounded-full flex items-center justify-center mb-6">
-            <Info size={40} className="text-app-accent" />
+        <div className="absolute inset-0 z-50 bg-[#121212] flex flex-col items-center justify-center px-8 text-center animate-in fade-in duration-300">
+          <div className="w-24 h-24 bg-[#1E1E1E] rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-indigo-500/10">
+            <div className="relative">
+              <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 rounded-full animate-pulse"></div>
+              <CheckCircle2 size={48} className="text-[#6366F1] relative z-10" />
+            </div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">
-            좋습니다.<br />
-            그럼 앞으로 어떤 신호가 올 때<br />
-            <span className="text-app-accent">알림</span>을 드릴까요?
+
+          <h2 className="text-2xl font-bold text-white mb-12 leading-snug">
+            단순 등락 알림이 아닌,<br />
+            <span className="text-[#818CF8]">사건 및 맥락 해설 알림</span>
           </h2>
-          <p className="text-zinc-400 mb-10 leading-relaxed">
-            주가의 큰 흐름을 결정할<br />
-            핵심 관전 포인트들을 짚어드립니다.
-          </p>
-          <button
-            onClick={() => setShowIntro(false)}
-            className="px-10 py-4 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform"
-          >
-            핵심 포인트 확인하기
-          </button>
+
+          <div className="w-full space-y-3">
+            <button
+              onClick={() => setShowIntro(false)}
+              className="w-full py-4 bg-[#6366F1] hover:bg-[#4F46E5] text-white font-bold rounded-2xl text-lg transition-all active:scale-[0.98] shadow-lg shadow-indigo-500/20"
+            >
+              핵심 포인트 잡아두기
+            </button>
+
+            <button
+              onClick={() => {
+                onComplete([]);
+                onClose();
+              }}
+              className="w-full py-4 text-zinc-500 font-medium hover:text-zinc-300 transition-colors text-sm"
+            >
+              일단 넘어가기
+            </button>
+          </div>
         </div>
       )}
 
@@ -148,6 +161,87 @@ const WatchpointBuilder: React.FC<WatchpointBuilderProps> = ({ stock, onComplete
             </ReactMarkdown>
           </div>
         </div>
+
+        {/* Related Articles & Reports Summary */}
+        {currentItem.references && (
+          <div className="mb-8 animate-in slide-in-from-bottom-3 delay-100">
+            <h3 className="text-sm font-bold text-zinc-400 mb-3 uppercase tracking-wider">
+              관련 기사 및 리포트 요약
+            </h3>
+
+            <div className="bg-zinc-900/50 rounded-2xl p-5 border border-white/10 space-y-4">
+              {/* Summaries */}
+              <ul className="space-y-3">
+                {currentItem.references.summaries.map((summary, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm text-zinc-300">
+                    <span className="text-indigo-400 mt-1.5">•</span>
+                    <div className="flex-1">
+                      <span className="leading-relaxed">
+                        <ReactMarkdown
+                          components={{
+                            strong: ({ node, ...props }) => <span className="text-white font-bold" {...props} />
+                          }}
+                        >
+                          {summary.text}
+                        </ReactMarkdown>
+                      </span>
+                      <a
+                        href={summary.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-md bg-white/5 hover:bg-white/10 text-[10px] text-zinc-400 hover:text-white transition-colors border border-white/5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        원문 <ArrowRight size={8} />
+                      </a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Pros & Cons */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-white/5 mt-2">
+                {/* Pro */}
+                <div className="bg-emerald-500/5 rounded-xl p-3 border border-emerald-500/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-emerald-400">PROS</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed mb-2">
+                    {currentItem.references.pros.text}
+                  </p>
+                  <a
+                    href={currentItem.references.pros.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-[10px] text-emerald-400 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    원문 <ArrowRight size={8} />
+                  </a>
+                </div>
+
+                {/* Con */}
+                <div className="bg-rose-500/5 rounded-xl p-3 border border-rose-500/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-rose-400">CONS</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed mb-2">
+                    {currentItem.references.cons.text}
+                  </p>
+                  <a
+                    href={currentItem.references.cons.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-[10px] text-rose-400 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    원문 <ArrowRight size={8} />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Options */}
         <div className="space-y-4 flex-1">

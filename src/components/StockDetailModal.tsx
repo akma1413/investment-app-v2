@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { X, TrendingUp, Activity, Calendar, Quote, ChevronDown, ChevronUp, AlertCircle, Eye, ArrowRight, CheckCircle2, AlertTriangle, ChevronRight as ChevronRightIcon } from 'lucide-react';
 import { Thesis, TimeFrame, Event } from '../types';
-import { useStore } from '../contexts/StoreContext';
+import { useStore, ALL_STOCKS } from '../contexts/StoreContext';
 import { NewsCard } from './stock-detail/NewsSection';
 import { ImmersiveEventMode } from './event/ImmersiveEventMode';
 import { EventTicket } from './event/EventTicket';
@@ -17,10 +17,11 @@ interface StockDetailModalProps {
     isLearningMode?: boolean;
     onReturnToQuiz?: () => void;
     onAddLogic?: () => void;
+    initialEventId?: string;
 }
 
-const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isLearningMode = false, onReturnToQuiz, onAddLogic }) => {
-    const { data, recordEventDecision } = useStore();
+const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isLearningMode = false, onReturnToQuiz, onAddLogic, initialEventId }) => {
+    const { data, recordEventDecision, addToMyThesis } = useStore();
     const [activeTimeFrame, setActiveTimeFrame] = useState<TimeFrame>('1M');
     const [isProfileExpanded, setIsProfileExpanded] = useState(false);
     const [expandedWatchpointId, setExpandedWatchpointId] = useState<number | null>(null);
@@ -32,6 +33,17 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
     const [showEventMode, setShowEventMode] = useState(false);
     const [showWatchpointBuilder, setShowWatchpointBuilder] = useState(false);
     const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+
+    // Auto-open event if initialEventId is provided
+    React.useEffect(() => {
+        if (initialEventId) {
+            const targetEvent = latestStock.events.find(e => e.id === initialEventId);
+            if (targetEvent && targetEvent.status !== 'Completed') {
+                setActiveEvent(targetEvent);
+                setShowEventMode(true);
+            }
+        }
+    }, [initialEventId, latestStock.events]);
 
     const isInvested = data.myThesis.some(t => t.ticker === latestStock.ticker);
 
@@ -127,16 +139,19 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
 
     // --- WATCHPOINT TRAFFIC LIGHT LOGIC ---
     const getWatchpointStatus = (wpId: number) => {
-        // Find events related to this watchpoint
-        const relatedEvents = latestStock.events?.filter(e => e.relatedWatchpointId === wpId) || [];
-        if (relatedEvents.length === 0) return 'neutral';
+        // Find events that impacted this watchpoint
+        const impactedEvents = latestStock.events?.filter(e =>
+            e.impactAnalysis?.some(impact => impact.watchpointId === wpId && impact.impact !== 'None')
+        ) || [];
 
-        // Check the most recent event's status
-        // Assuming events are sorted or we just take the first one found for now
-        const latestEvent = relatedEvents[0];
+        if (impactedEvents.length === 0) return 'neutral';
 
-        if (latestEvent.factCheck?.status === 'Pass') return 'success';
-        if (latestEvent.factCheck?.status === 'Fail') return 'danger';
+        // Check the most recent event's impact
+        const latestEvent = impactedEvents[0];
+        const impact = latestEvent.impactAnalysis?.find(i => i.watchpointId === wpId);
+
+        if (impact?.impact === 'Positive') return 'success';
+        if (impact?.impact === 'Negative') return 'danger';
         return 'neutral';
     };
 
@@ -146,7 +161,14 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
         setShowEventMode(true);
     };
 
-    const handleWatchpointComplete = (selections: any[]) => {
+    const handleWatchpointComplete = (selections: { watchpointId: number, side: 'Bull' | 'Bear' }[]) => {
+        if (selections.length > 0) {
+            const originalStock = ALL_STOCKS.find(s => s.ticker === stock.ticker);
+            if (originalStock) {
+                // Save all watchpoints from the original stock
+                addToMyThesis(originalStock, originalStock.watchpoints, latestStock.status);
+            }
+        }
         setShowWatchpointBuilder(false);
     };
 
@@ -168,19 +190,22 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
             <div className="w-full max-w-[430px] h-[95vh] bg-[#121212] rounded-t-[32px] pointer-events-auto overflow-hidden flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300 relative border-t border-white/10 mx-auto">
 
                 {/* --- HEADER --- */}
-                <header className="flex justify-between items-center px-6 py-6 border-b border-white/5 bg-[#121212]/95 backdrop-blur-md sticky top-0 z-10">
+                <header className="flex justify-between items-start px-6 py-6 border-b border-white/5 bg-[#121212]/95 backdrop-blur-md sticky top-0 z-10">
                     <div>
                         <div className="text-sm font-bold text-zinc-500 mb-0.5">{stock.ticker}</div>
                         <h2 className="text-2xl font-bold text-white tracking-tight">{stock.name}</h2>
-                    </div>
-                    <div className="text-right">
-                        <div className="text-2xl font-bold text-white tracking-tight">{formatCurrency(stock.currentPrice, 'USD')}</div>
-                        <div className={`text-base font-bold ${getRateColorClass(stock.changeRate)}`}>
-                            {formatRate(stock.changeRate)}
+
+                        {/* Moved Price Info Here to avoid overlap */}
+                        <div className="flex items-baseline gap-2 mt-1">
+                            <span className="text-xl font-bold text-white tracking-tight">{formatCurrency(stock.currentPrice, 'USD')}</span>
+                            <span className={`text-sm font-bold ${getRateColorClass(stock.changeRate)}`}>
+                                {formatRate(stock.changeRate)}
+                            </span>
                         </div>
                     </div>
+
                     {!isLearningMode && (
-                        <button onClick={onClose} className="ml-4 p-2 rounded-full bg-black/50 hover:bg-zinc-800 text-white absolute right-6 top-6 z-50 backdrop-blur-md border border-white/10 transition-colors">
+                        <button onClick={onClose} className="p-2 rounded-full bg-zinc-800/50 hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors border border-white/5">
                             <X size={24} />
                         </button>
                     )}
@@ -396,7 +421,7 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
                                                 <Eye size={18} className="text-zinc-400" />
                                                 <span className="text-lg font-bold text-zinc-300">핵심 관전 포인트</span>
                                             </div>
-                                            {stock.watchpoints.length > 0 && !isLearningMode && (
+                                            {latestStock.watchpoints && latestStock.watchpoints.length > 0 && !isLearningMode && (
                                                 <button
                                                     onClick={() => setShowWatchpointBuilder(true)}
                                                     className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors px-3 py-1.5 bg-indigo-500/10 rounded-full"
@@ -407,11 +432,14 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
                                         </div>
 
                                         <div className="space-y-3">
-                                            {stock.watchpoints.length > 0 ? (
-                                                stock.watchpoints.map((wp) => {
+                                            {latestStock.watchpoints && latestStock.watchpoints.length > 0 ? (
+                                                latestStock.watchpoints.map((wp) => {
                                                     const status = getWatchpointStatus(wp.id);
                                                     const isExpanded = expandedWatchpointId === wp.id;
-                                                    const relatedEvents = latestStock.events?.filter(e => e.relatedWatchpointId === wp.id) || [];
+                                                    // Filter events that have an impact on this watchpoint
+                                                    const relatedEvents = latestStock.events?.filter(e =>
+                                                        e.impactAnalysis?.some(impact => impact.watchpointId === wp.id && impact.impact !== 'None')
+                                                    ) || [];
 
                                                     return (
                                                         <div key={wp.id} className="rounded-2xl bg-black/30 border border-white/5 overflow-hidden transition-all duration-300">
@@ -479,7 +507,7 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
                                                         onClick={() => setShowWatchpointBuilder(true)}
                                                         className="px-6 py-3 bg-zinc-800 rounded-full text-sm font-bold text-white hover:bg-zinc-700 transition-colors"
                                                     >
-                                                        핵심 포인트 잡아두기
+                                                        워치포인트 설정하기
                                                     </button>
                                                 </div>
                                             )}
@@ -579,19 +607,29 @@ const StockDetailModal: React.FC<StockDetailModalProps> = ({ stock, onClose, isL
             {showEventMode && activeEvent && (
                 <ImmersiveEventMode
                     event={activeEvent}
-                    relatedWatchpoint={stock.watchpoints.find(w => w.id === activeEvent.relatedWatchpointId)}
+                    watchpoints={(latestStock.watchpoints && latestStock.watchpoints.length > 0)
+                        ? latestStock.watchpoints
+                        : (ALL_STOCKS.find(s => s.ticker === stock.ticker)?.watchpoints || [])}
                     onClose={() => setShowEventMode(false)}
                     onComplete={handleEventComplete}
                 />
             )}
 
             {showWatchpointBuilder && (
-                <div className="fixed inset-0 z-[150] bg-[#121212] animate-in fade-in duration-300">
-                    <WatchpointBuilder
-                        stock={stock}
-                        onClose={() => setShowWatchpointBuilder(false)}
-                        onComplete={handleWatchpointComplete}
-                    />
+                <div className="fixed inset-0 z-[150] flex justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-auto">
+                    <div className="w-full max-w-[430px] h-full bg-[#121212] relative shadow-2xl overflow-hidden">
+                        <WatchpointBuilder
+                            stock={{
+                                ...latestStock,
+                                watchpoints: (latestStock.watchpoints && latestStock.watchpoints.length > 0)
+                                    ? latestStock.watchpoints
+                                    : (ALL_STOCKS.find(s => s.ticker === stock.ticker)?.watchpoints || [])
+                            }}
+                            onClose={() => setShowWatchpointBuilder(false)}
+                            onComplete={handleWatchpointComplete}
+                            skipIntro={true}
+                        />
+                    </div>
                 </div>
             )}
 

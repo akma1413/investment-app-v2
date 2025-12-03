@@ -77,7 +77,14 @@ const NarrativeIntro: React.FC<NarrativeIntroProps> = ({ stock, onComplete, onCl
           <div className="animate-in slide-in-from-right duration-500 fade-in">
             <h2 className="text-3xl font-black text-white mb-6 leading-tight">{narrative.steps.floor.title}</h2>
             <div className="prose prose-invert max-w-none">
-              <ReactMarkdown components={mdComponents}>{narrative.steps.floor.content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  ...mdComponents,
+                  li: ({ node, ...props }: any) => <li className="pl-1 text-[1.15em] font-bold leading-snug transition-all" {...props} />
+                }}
+              >
+                {narrative.steps.floor.content}
+              </ReactMarkdown>
             </div>
           </div>
         );
@@ -86,7 +93,14 @@ const NarrativeIntro: React.FC<NarrativeIntroProps> = ({ stock, onComplete, onCl
           <div className="animate-in slide-in-from-right duration-500 fade-in">
             <h2 className="text-3xl font-black text-white mb-6 leading-tight">{narrative.steps.upside.title}</h2>
             <div className="prose prose-invert max-w-none">
-              <ReactMarkdown components={mdComponents}>{narrative.steps.upside.content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  ...mdComponents,
+                  li: ({ node, ...props }: any) => <li className="pl-1 text-[1.15em] font-bold leading-snug transition-all" {...props} />
+                }}
+              >
+                {narrative.steps.upside.content}
+              </ReactMarkdown>
             </div>
           </div>
         );
